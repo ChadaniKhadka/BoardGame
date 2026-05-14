@@ -1,9 +1,6 @@
 using BoardGame.Core;
 
 namespace BoardGame.Games;
-
-// OCP: adds only what's unique — board size and win length
-// LSP: fully substitutable for Game wherever Game is expected
 public class TicTacToeGame : BaseGame
 {
     public override string GameName => "Tic-Tac-Toe";

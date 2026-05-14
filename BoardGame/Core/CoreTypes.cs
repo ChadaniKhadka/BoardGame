@@ -1,16 +1,13 @@
 namespace BoardGame.Core;
 
-// ── Move ──────────────────────────────────────────────────────────────────
-// SRP: only holds move data and serialisation
+// Move
 public abstract class Move
 {
     public int PlayerIndex { get; set; }
     public abstract string Serialize();
 }
 
-// ── Board ─────────────────────────────────────────────────────────────────
-// SRP: only owns cell state and display
-// OCP: extend by subclassing, never modify base
+// Board 
 public abstract class Board
 {
     public abstract bool   ApplyMove(Move move);
@@ -22,8 +19,7 @@ public abstract class Board
     public abstract void   Deserialize(string data);
 }
 
-// ── Player ────────────────────────────────────────────────────────────────
-// LSP: HumanPlayer and ComputerPlayer are drop-in replacements
+// Player 
 public abstract class Player
 {
     public string Name   { get; }
@@ -36,8 +32,7 @@ public abstract class Player
     public abstract Move GetMove(Board board, Game game);
 }
 
-// ── GameState (save / load DTO) ───────────────────────────────────────────
-// SRP: pure data container, no behaviour
+// GameState (save / load) 
 public class GameState
 {
     public string       GameType           { get; set; } = "";

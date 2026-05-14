@@ -2,16 +2,13 @@ using BoardGame.Core;
 using BoardGame.Players;
 
 namespace BoardGame.Games;
-
-// SRP: handles only the common save/load/prompt plumbing shared by every game
-// DRY: subclasses don't repeat CreateGameState / LoadFromState boilerplate
 public abstract class BaseGame : Game
 {
     protected GridBoard Grid => (GridBoard)Board;
 
     protected BaseGame(Player[] players) : base(players) { }
 
-    // ── Common save/load ──────────────────────────────────────────────────
+    //  Common save/load 
     public override GameState CreateGameState() => new()
     {
         GameType           = GameName.ToLower().Replace(" ", ""),
@@ -30,7 +27,7 @@ public abstract class BaseGame : Game
         CurrentIdx = s.CurrentPlayerIndex;
     }
 
-    // ── Common prompt ─────────────────────────────────────────────────────
+    //  Common prompt ─
     // Subclasses override only when they need different input (e.g. Numerical)
     public override Move PromptHumanMove(Player p)
     {

@@ -2,7 +2,6 @@ using BoardGame.Core;
 
 namespace BoardGame.Games;
 
-// SRP: ConnectFourGame only adds gravity logic and column-based input
 public class ConnectFourGame : BaseGame
 {
     public override string GameName => "Connect Four";
@@ -10,8 +9,6 @@ public class ConnectFourGame : BaseGame
     public ConnectFourGame(Player[] players) : base(players) { }
 
     protected override void SetupBoard() => Board = new GridBoard(6, 7);
-
-    // Gravity: find the lowest empty row in a column
     private int DropRow(int col)
     {
         for (int r = Grid.Rows - 1; r >= 0; r--)
@@ -43,8 +40,6 @@ public class ConnectFourGame : BaseGame
         }
         return moves;
     }
-
-    // Override: column-only input, gravity determines row
     public override Move PromptHumanMove(Player p)
     {
         while (true)

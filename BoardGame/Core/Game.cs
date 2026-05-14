@@ -2,9 +2,6 @@ using BoardGame.Moves;
 using BoardGame.SaveLoad;
 
 namespace BoardGame.Core;
-
-// Template Method pattern: Play() defines the skeleton, subclasses fill hooks
-// SRP: Game manages only turn flow, undo/redo, save — not board or win logic
 public abstract class Game
 {
     protected Board     Board     = null!;
@@ -19,7 +16,7 @@ public abstract class Game
 
     protected Game(Player[] players) { Players = players; }
 
-    // ── Main loop (Template Method) ───────────────────────────────────────
+    //  Main loop
     public void Play()
     {
         SetupBoard();
@@ -52,7 +49,7 @@ public abstract class Game
         AnnounceResult();
     }
 
-    // ── Move execution ────────────────────────────────────────────────────
+    //  Move execution 
     protected virtual void DoMove(Move move)
     {
         History.Execute(new MoveCommand(move, Board));
@@ -62,7 +59,7 @@ public abstract class Game
         else CurrentIdx = (CurrentIdx + 1) % Players.Length;
     }
 
-    // ── Undo / Redo ───────────────────────────────────────────────────────
+    //  Undo / Redo 
     public void Undo()
     {
         if (!History.CanUndo()) { Console.WriteLine("Nothing to undo."); return; }
@@ -80,8 +77,7 @@ public abstract class Game
         Console.WriteLine("Move redone.");
     }
 
-    // ── Save ──────────────────────────────────────────────────────────────
-    // DIP: depends on ISaveStrategy abstraction, not concrete classes
+    //  Save 
     public void SaveGame()
     {
         Console.Write("Filename (no extension): ");
@@ -97,7 +93,7 @@ public abstract class Game
         Console.WriteLine("Game saved.");
     }
 
-    // ── Help ──────────────────────────────────────────────────────────────
+    //  Help 
     private void ShowHelp()
     {
         Console.WriteLine("\n--- Help ---");
@@ -112,13 +108,13 @@ public abstract class Game
 
     protected virtual void ShowGameHelp() { }   // OCP: each game can add tips
 
-    // ── Result ────────────────────────────────────────────────────────────
+    //  Result 
     protected virtual void AnnounceResult()
         => Console.WriteLine(Winner != null
             ? $"\n*** {Winner.Name} wins! ***"
             : "\n*** Draw! ***");
 
-    // ── Abstract hooks ────────────────────────────────────────────────────
+    //  Abstract hooks 
     protected abstract void       SetupBoard();
     protected abstract bool       CheckWin();
     protected abstract bool       HasMoves();

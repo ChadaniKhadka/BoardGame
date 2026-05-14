@@ -2,7 +2,6 @@ using BoardGame.Core;
 
 namespace BoardGame.Games;
 
-// OCP: only overrides board size and win length — everything else inherited
 public class GomokuGame : BaseGame
 {
     public override string GameName => "Gomoku";

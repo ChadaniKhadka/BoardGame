@@ -2,8 +2,6 @@ using BoardGame.Games;
 
 namespace BoardGame.Core;
 
-// SRP: only checks win conditions on a GridBoard — no game state knowledge
-// DRY: all 4 direction-based games reuse this instead of repeating the logic
 public static class WinChecker
 {
     // Returns true if 'symbol' has 'target' in a row/col/diagonal on 'board'
@@ -30,7 +28,7 @@ public static class WinChecker
             if (count >= target) return true;
         }
 
-        // Diagonals (↘)
+        // Diagonals (↘
         for (int r = 0; r <= R - target; r++)
             for (int c = 0; c <= C - target; c++)
             {
@@ -40,7 +38,7 @@ public static class WinChecker
                 if (count == target) return true;
             }
 
-        // Anti-diagonals (↙)
+        // Anti-diagonals 
         for (int r = 0; r <= R - target; r++)
             for (int c = target - 1; c < C; c++)
             {

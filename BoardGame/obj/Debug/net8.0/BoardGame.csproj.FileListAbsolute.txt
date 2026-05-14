@@ -1,17 +1,3 @@
-C:\Users\khadk\Downloads\BoardGameClean\BoardGameClean\bin\Debug\net8.0\BoardGame.exe
-C:\Users\khadk\Downloads\BoardGameClean\BoardGameClean\bin\Debug\net8.0\BoardGame.deps.json
-C:\Users\khadk\Downloads\BoardGameClean\BoardGameClean\bin\Debug\net8.0\BoardGame.runtimeconfig.json
-C:\Users\khadk\Downloads\BoardGameClean\BoardGameClean\bin\Debug\net8.0\BoardGame.dll
-C:\Users\khadk\Downloads\BoardGameClean\BoardGameClean\bin\Debug\net8.0\BoardGame.pdb
-C:\Users\khadk\Downloads\BoardGameClean\BoardGameClean\obj\Debug\net8.0\BoardGame.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\khadk\Downloads\BoardGameClean\BoardGameClean\obj\Debug\net8.0\BoardGame.AssemblyInfoInputs.cache
-C:\Users\khadk\Downloads\BoardGameClean\BoardGameClean\obj\Debug\net8.0\BoardGame.AssemblyInfo.cs
-C:\Users\khadk\Downloads\BoardGameClean\BoardGameClean\obj\Debug\net8.0\BoardGame.csproj.CoreCompileInputs.cache
-C:\Users\khadk\Downloads\BoardGameClean\BoardGameClean\obj\Debug\net8.0\BoardGame.dll
-C:\Users\khadk\Downloads\BoardGameClean\BoardGameClean\obj\Debug\net8.0\refint\BoardGame.dll
-C:\Users\khadk\Downloads\BoardGameClean\BoardGameClean\obj\Debug\net8.0\BoardGame.pdb
-C:\Users\khadk\Downloads\BoardGameClean\BoardGameClean\obj\Debug\net8.0\BoardGame.genruntimeconfig.cache
-C:\Users\khadk\Downloads\BoardGameClean\BoardGameClean\obj\Debug\net8.0\ref\BoardGame.dll
 C:\Users\khadk\Downloads\BoardGame\BoardGame\bin\Debug\net8.0\BoardGame.exe
 C:\Users\khadk\Downloads\BoardGame\BoardGame\bin\Debug\net8.0\BoardGame.deps.json
 C:\Users\khadk\Downloads\BoardGame\BoardGame\bin\Debug\net8.0\BoardGame.runtimeconfig.json
@@ -26,3 +12,4 @@ C:\Users\khadk\Downloads\BoardGame\BoardGame\obj\Debug\net8.0\refint\BoardGame.d
 C:\Users\khadk\Downloads\BoardGame\BoardGame\obj\Debug\net8.0\BoardGame.pdb
 C:\Users\khadk\Downloads\BoardGame\BoardGame\obj\Debug\net8.0\BoardGame.genruntimeconfig.cache
 C:\Users\khadk\Downloads\BoardGame\BoardGame\obj\Debug\net8.0\ref\BoardGame.dll
+C:\Users\khadk\Downloads\BoardGame\BoardGame\obj\Debug\net8.0\BoardGame.sourcelink.json

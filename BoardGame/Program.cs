@@ -1,6 +1,5 @@
 using BoardGame.Factory;
 
-// KISS: top-level statements, simple menu loop, nothing fancy
 Console.WriteLine("+-----------------------------------+");
 Console.WriteLine("|   Two-Player Board Game Framework |");
 Console.WriteLine("+-----------------------------------+");
@@ -24,7 +23,7 @@ while (running)
 
 Console.WriteLine("\n  Goodbye!\n");
 
-// ── New game ──────────────────────────────────────────────────────────────
+//  New game 
 static void NewGame()
 {
     Console.WriteLine("\n  --- Select Game ---");
@@ -50,7 +49,7 @@ static void NewGame()
     catch (Exception ex) { Console.WriteLine($"  Error: {ex.Message}"); }
 }
 
-// ── Load saved game ───────────────────────────────────────────────────────
+//  Load saved game ─
 static void LoadGame()
 {
     Console.Write("\n  Filename (.txt or .json): ");

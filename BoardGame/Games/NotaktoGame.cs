@@ -3,7 +3,6 @@ using BoardGame.Core;
 namespace BoardGame.Games;
 
 // Notakto: both players use 'X', completing 3 in a row loses
-// SRP: only adds the misère (last-mover-loses) win reversal
 public class NotaktoGame : BaseGame
 {
     public override string GameName => "Notakto";

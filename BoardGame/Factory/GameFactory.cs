@@ -5,12 +5,9 @@ using BoardGame.SaveLoad;
 
 namespace BoardGame.Factory;
 
-// SRP: only knows how to build and restore Game instances
-// OCP: add a new game by adding one line to the switch — nothing else changes
-// DIP: returns Game (abstraction), not concrete game types
 public static class GameFactory
 {
-    // ── Create a fresh game ───────────────────────────────────────────────
+    //  Create a fresh game 
     public static Game Create(int choice, Player[] players) => choice switch
     {
         1 => new TicTacToeGame(players),
@@ -21,7 +18,7 @@ public static class GameFactory
         _ => throw new ArgumentException("Unknown game selection.")
     };
 
-    // ── Load a saved game ─────────────────────────────────────────────────
+    //  Load a saved game 
     public static Game Load(string filename)
     {
         // DIP: choose strategy by file extension, not hardcoded type
@@ -51,7 +48,7 @@ public static class GameFactory
         return game;
     }
 
-    // ── Build players from user input ─────────────────────────────────────
+    //  Build players from user input ─
     public static Player[] BuildPlayers(string mode)
     {
         string n1 = Prompt("Player 1", "Alice");
@@ -62,7 +59,7 @@ public static class GameFactory
         return [p1, p2];
     }
 
-    // ── Helper ────────────────────────────────────────────────────────────
+    //  Helper ─
     private static string Prompt(string label, string fallback)
     {
         Console.Write($"  {label} (default '{fallback}'): ");

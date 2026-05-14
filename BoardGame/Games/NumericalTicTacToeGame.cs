@@ -3,12 +3,6 @@ using BoardGame.Core;
 namespace BoardGame.Games;
 
 // Numerical Tic-Tac-Toe rules:
-//   Player 1 places odd numbers  (1, 3, 5, 7, 9)
-//   Player 2 places even numbers (2, 4, 6, 8)
-//   First to have any line sum to 15 wins
-//   Each number may only be used once
-
-// SRP: only adds number tracking and sum-based win logic
 public class NumericalTicTacToeGame : BaseGame
 {
     // Track which numbers have been used

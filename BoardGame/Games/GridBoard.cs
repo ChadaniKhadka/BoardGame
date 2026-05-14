@@ -2,8 +2,7 @@ using BoardGame.Core;
 
 namespace BoardGame.Games;
 
-// ── GridMove ──────────────────────────────────────────────────────────────
-// SRP: only holds row, col and the value placed
+//  GridMove 
 public class GridMove : Move
 {
     public int  Row   { get; set; }
@@ -25,9 +24,7 @@ public class GridMove : Move
     }
 }
 
-// ── GridBoard ─────────────────────────────────────────────────────────────
-// SRP: owns the 2-D cell array and rendering — nothing else
-// OCP: games read Cells directly; no need to subclass for different sizes
+//  GridBoard 
 public class GridBoard : Board
 {
     public  int    Rows { get; }

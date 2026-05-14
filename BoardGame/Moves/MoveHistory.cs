@@ -1,11 +1,9 @@
 using BoardGame.Core;
 
 namespace BoardGame.Moves;
-
-// ISP: ICommand has only the two methods every command needs
 public interface ICommand { void Execute(); void Undo(); }
 
-// SRP: MoveCommand only knows how to apply / undo one move on one board
+
 public class MoveCommand : ICommand
 {
     public  Move  Move   { get; }
@@ -16,9 +14,6 @@ public class MoveCommand : ICommand
     public void Execute() => _board.ApplyMove(Move);
     public void Undo()    => _board.UndoMove(Move);
 }
-
-// SRP: MoveHistory only manages the command stacks
-// KISS: two stacks, five methods — nothing more needed (YAGNI)
 public class MoveHistory
 {
     private readonly Stack<ICommand> _undo = new();

@@ -3,16 +3,13 @@ using BoardGame.Core;
 
 namespace BoardGame.SaveLoad;
 
-// ISP: one focused interface — save and load only
-// DIP: Game depends on this interface, not on concrete classes
 public interface ISaveStrategy
 {
     void      Save(GameState state, string name);
     GameState Load(string name);
 }
 
-// ── Plain text ─────────────────────────────────────────────────────────────
-// SRP: only knows how to read/write key=value text files
+//  Plain text 
 public class TextSaveStrategy : ISaveStrategy
 {
     public void Save(GameState s, string name)
@@ -72,8 +69,7 @@ public class TextSaveStrategy : ISaveStrategy
     }
 }
 
-// ── JSON ───────────────────────────────────────────────────────────────────
-// SRP: only knows how to read/write JSON files
+//  JSON 
 public class JsonSaveStrategy : ISaveStrategy
 {
     private static readonly JsonSerializerOptions Opts = new() { WriteIndented = true };
