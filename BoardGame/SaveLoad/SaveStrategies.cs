@@ -5,43 +5,57 @@ namespace BoardGame.SaveLoad;
 
 public interface ISaveStrategy
 {
-    void      Save(GameState state, string name);
-    GameState Load(string name);
+    void      Save(GameState state, string filename);
+    GameState Load(string filename);
+    string    GetFileExtension();
 }
 
-//  Plain text 
 public class TextSaveStrategy : ISaveStrategy
 {
-    public void Save(GameState s, string name)
-    {
-        if (!name.EndsWith(".txt")) name += ".txt";
-        using var w = new StreamWriter(name);
+    public string GetFileExtension() => ".txt";
 
-        w.WriteLine($"GameType={s.GameType}");
-        w.WriteLine($"BoardData={s.BoardData}");
-        w.WriteLine($"CurrentIdx={s.CurrentPlayerIndex}");
-        w.WriteLine($"Count={s.PlayerNames.Length}");
+    public void Save(GameState state, string filename)
+    {
+        string path = WithExtension(filename);
+        File.WriteAllText(path, Serialise(state));
+    }
+
+    public GameState Load(string filename)
+    {
+        string path = WithExtension(filename);
+        return Deserialise(File.ReadAllText(path));
+    }
+
+    private string Serialise(GameState s)
+    {
+        var lines = new List<string>
+        {
+            $"GameType={s.GameType}",
+            $"BoardData={s.BoardData}",
+            $"CurrentIdx={s.CurrentPlayerIndex}",
+            $"Count={s.PlayerNames.Length}",
+        };
 
         for (int i = 0; i < s.PlayerNames.Length; i++)
         {
-            w.WriteLine($"N{i}={s.PlayerNames[i]}");
-            w.WriteLine($"S{i}={s.PlayerSymbols[i]}");
-            w.WriteLine($"T{i}={s.PlayerTypes[i]}");
+            lines.Add($"N{i}={s.PlayerNames[i]}");
+            lines.Add($"S{i}={s.PlayerSymbols[i]}");
+            lines.Add($"T{i}={s.PlayerTypes[i]}");
         }
 
-        w.WriteLine($"Moves={s.MoveHistory.Count}");
+        lines.Add($"Moves={s.MoveHistory.Count}");
         for (int i = 0; i < s.MoveHistory.Count; i++)
-            w.WriteLine($"M{i}={s.MoveHistory[i]}");
+            lines.Add($"M{i}={s.MoveHistory[i]}");
 
         foreach (var kv in s.Extra)
-            w.WriteLine($"X_{kv.Key}={kv.Value}");
+            lines.Add($"X_{kv.Key}={kv.Value}");
+
+        return string.Join(Environment.NewLine, lines);
     }
 
-    public GameState Load(string name)
+    private GameState Deserialise(string data)
     {
-        if (!name.EndsWith(".txt")) name += ".txt";
-
-        var d = File.ReadAllLines(name)
+        var d = data.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
                     .Where(l => l.Contains('='))
                     .ToDictionary(
                         l => l[..l.IndexOf('=')],
@@ -67,23 +81,48 @@ public class TextSaveStrategy : ISaveStrategy
 
         return gs;
     }
+
+    private string WithExtension(string filename) =>
+        filename.EndsWith(GetFileExtension(), StringComparison.OrdinalIgnoreCase)
+            ? filename
+            : filename + GetFileExtension();
 }
 
-//  JSON 
 public class JsonSaveStrategy : ISaveStrategy
 {
     private static readonly JsonSerializerOptions Opts = new() { WriteIndented = true };
 
-    public void Save(GameState s, string name)
+    public string GetFileExtension() => ".json";
+
+    public void Save(GameState state, string filename)
     {
-        if (!name.EndsWith(".json")) name += ".json";
-        File.WriteAllText(name, JsonSerializer.Serialize(s, Opts));
+        string path = WithExtension(filename);
+        File.WriteAllText(path, SerialiseToJson(state));
     }
 
-    public GameState Load(string name)
+    public GameState Load(string filename)
     {
-        if (!name.EndsWith(".json")) name += ".json";
-        return JsonSerializer.Deserialize<GameState>(File.ReadAllText(name))
-               ?? throw new InvalidDataException("Bad save file.");
+        string path = WithExtension(filename);
+        return DeserialiseFromJson(File.ReadAllText(path));
     }
+
+    private string SerialiseToJson(GameState state) =>
+        JsonSerializer.Serialize(state, Opts);
+
+    private GameState DeserialiseFromJson(string json) =>
+        JsonSerializer.Deserialize<GameState>(json)
+        ?? throw new InvalidDataException("Bad save file.");
+
+    private string WithExtension(string filename) =>
+        filename.EndsWith(GetFileExtension(), StringComparison.OrdinalIgnoreCase)
+            ? filename
+            : filename + GetFileExtension();
+}
+
+public static class SaveStrategyFactory
+{
+    public static ISaveStrategy ForFilename(string filename) =>
+        filename.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+            ? new JsonSaveStrategy()
+            : new TextSaveStrategy();
 }
