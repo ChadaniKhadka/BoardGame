@@ -21,11 +21,7 @@ public static class GameFactory
     //  Load a saved game 
     public static Game Load(string filename)
     {
-        // DIP: choose strategy by file extension, not hardcoded type
-        ISaveStrategy strategy = filename.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
-            ? new JsonSaveStrategy()
-            : new TextSaveStrategy();
-
+        ISaveStrategy strategy = SaveStrategyFactory.ForFilename(filename);
         GameState s = strategy.Load(filename);
 
         Player[] players = Enumerable.Range(0, s.PlayerNames.Length)

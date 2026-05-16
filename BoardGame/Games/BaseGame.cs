@@ -11,7 +11,7 @@ public abstract class BaseGame : Game
     //  Common save/load 
     public override GameState CreateGameState() => new()
     {
-        GameType           = GameName.ToLower().Replace(" ", ""),
+        GameType           = GameName.ToLower().Replace(" ", "").Replace("-", ""),
         BoardData          = Board.Serialize(),
         CurrentPlayerIndex = CurrentIdx,
         PlayerNames        = Players.Select(p => p.Name).ToArray(),
@@ -22,9 +22,13 @@ public abstract class BaseGame : Game
 
     public override void LoadFromState(GameState s)
     {
+        _resumeFromSave = true;
         SetupBoard();
         Board.Deserialize(s.BoardData);
         CurrentIdx = s.CurrentPlayerIndex;
+
+        var moves = s.MoveHistory.Select(GridMove.Deserialize).Cast<Move>().ToList();
+        History.Restore(moves, Board);
     }
 
     //  Common prompt ─

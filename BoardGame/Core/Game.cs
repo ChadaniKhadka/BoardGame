@@ -10,6 +10,7 @@ public abstract class Game
     protected bool      GameOver;
     protected Player?   Winner;
     protected MoveHistory History = new();
+    protected bool        _resumeFromSave;
 
     public abstract string GameName { get; }
     protected Player Current => Players[CurrentIdx];
@@ -19,7 +20,10 @@ public abstract class Game
     //  Main loop
     public void Play()
     {
-        SetupBoard();
+        if (!_resumeFromSave)
+            SetupBoard();
+        _resumeFromSave = false;
+
         Console.WriteLine($"\n=== {GameName} ===");
         Console.WriteLine("Commands: M=Move  U=Undo  R=Redo  S=Save  H=Help\n");
 

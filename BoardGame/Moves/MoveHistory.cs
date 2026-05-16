@@ -49,4 +49,13 @@ public class MoveHistory
     // Returns moves in chronological order (oldest first)
     public List<Move> GetHistory() =>
         _undo.Select(c => ((MoveCommand)c).Move).Reverse().ToList();
+
+    // Board already reflects saved moves — rebuild stacks without re-applying
+    public void Restore(IReadOnlyList<Move> moves, Board board)
+    {
+        _undo.Clear();
+        _redo.Clear();
+        foreach (var move in moves)
+            _undo.Push(new MoveCommand(move, board));
+    }
 }
