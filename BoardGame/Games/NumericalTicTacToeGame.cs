@@ -84,36 +84,41 @@ public class NumericalTicTacToeGame : BaseGame
         base.DoMove(move);
     }
 
+    public override void ShowTurnInfo(Player currentPlayer)
+    {
+        var available = AvailableNumbers(currentPlayer.Index).ToList();
+
+        Console.WriteLine($"Your numbers: {string.Join(", ", available)}");
+        Console.WriteLine("Enter Your Move [number <space> row <space> col (e.g. 5 2 3)] or Commands:  U=Undo  R=Redo  S=Save  H=Help");
+    }
+
     // Override PromptHumanMove to ask for number + cell
-    public override Move PromptHumanMove(Player p)
+    public override Move? PromptHumanMove(Player p, string input)
     {
         var available = AvailableNumbers(p.Index).ToList();
-        Console.WriteLine($"  Your numbers: {string.Join(", ", available)}");
 
-        while (true)
+        var parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        if (parts.Length == 3
+            && int.TryParse(parts[0], out int num)
+            && int.TryParse(parts[1], out int row)
+            && int.TryParse(parts[2], out int col)
+            && available.Contains(num)
+            && row >= 1 && row <= 3
+            && col >= 1 && col <= 3
+            && Grid.IsEmpty(row - 1, col - 1))
         {
-            Console.Write("  Enter number row col (e.g. 5 2 3): ");
-            string? line = Console.ReadLine()?.Trim();
-            var parts = line?.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-            if (parts?.Length == 3
-                && int.TryParse(parts[0], out int num)
-                && int.TryParse(parts[1], out int row)
-                && int.TryParse(parts[2], out int col)
-                && available.Contains(num)
-                && row >= 1 && row <= 3
-                && col >= 1 && col <= 3
-                && Grid.IsEmpty(row - 1, col - 1))
+            return new GridMove
             {
-                return new GridMove
-                {
-                    PlayerIndex = p.Index,
-                    Row = row - 1, Col = col - 1,
-                    Value = (char)('0' + num)
-                };
-            }
-            Console.WriteLine("  Invalid — check number is available and cell is empty.");
+                PlayerIndex = p.Index,
+                Row = row - 1,
+                Col = col - 1,
+                Value = (char)('0' + num)
+            };
         }
+
+        Console.WriteLine("     Invalid — enter available number, row and column. Example: 5 2 3");
+        return null;
     }
 
     protected override void ShowGameHelp()
