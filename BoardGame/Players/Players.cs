@@ -10,7 +10,9 @@ public class HumanPlayer : Player
         : base(name, symbol, index) { }
 
     public override Move GetMove(Board board, Game game)
-        => game.PromptHumanMove(this);
+    {
+        throw new InvalidOperationException("Human moves are handled by the game input loop.");
+    }
 }
 
 // SRP: ComputerPlayer only chooses a move — win-check logic lives in the game

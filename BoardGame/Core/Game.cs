@@ -1,7 +1,9 @@
 using BoardGame.Moves;
+using BoardGame.Players;
 using BoardGame.SaveLoad;
 
 namespace BoardGame.Core;
+
 public abstract class Game
 {
     protected Board     Board     = null!;
@@ -17,71 +19,226 @@ public abstract class Game
 
     protected Game(Player[] players) { Players = players; }
 
-    //  Main loop
+    private bool IsHvCMode => Players.Any(p => p is ComputerPlayer);
+
+    private int HumanPlayerIndex =>
+        Players.First(p => p is HumanPlayer).Index;
+
     public void Play()
     {
         if (!_resumeFromSave)
             SetupBoard();
         _resumeFromSave = false;
 
-        Console.WriteLine($"\n=== {GameName} ===");
-        Console.WriteLine("Commands: M=Move  U=Undo  R=Redo  S=Save  H=Help\n");
+        Console.WriteLine($"\n========== {GameName} ==========");
 
         while (!GameOver)
         {
             Board.Display();
-            Console.WriteLine($"\n{Current.Name}'s turn [{Current.Symbol}]");
 
-            if (Current is Players.HumanPlayer)
+            if (Current is HumanPlayer)
             {
-                Console.Write("Action: ");
-                string cmd = (Console.ReadLine() ?? "m").Trim().ToLower();
-                switch (cmd)
-                {
-                    case "u": Undo();     continue;
-                    case "r": Redo();     continue;
-                    case "s": SaveGame(); continue;
-                    case "h": ShowHelp(); continue;
-                }
-            }
+                Console.WriteLine($"\nPlayer {CurrentIdx + 1}'s turn");
 
-            Move? move = Current.GetMove(Board, this);
-            if (move != null) DoMove(move);
+                ShowTurnInfo(Current);
+
+                Console.Write($"P{CurrentIdx + 1}> ");
+
+                string input = Console.ReadLine()?.Trim() ?? "";
+
+                switch (input.ToLower())
+                {
+                    case "u":
+                        Undo();
+                        continue;
+
+                    case "r":
+                        Redo();
+                        continue;
+
+                    case "s":
+                        SaveGame();
+                        continue;
+
+                    case "h":
+                        ShowHelp();
+                        continue;
+                }
+
+                Move? move = PromptHumanMove(Current, input);
+                if (move != null)
+                    DoMove(move);
+            }
+            else
+            {
+                Console.WriteLine($"\nPlayer {CurrentIdx + 1}'s turn");
+                Move? move = Current.GetMove(Board, this);
+                if (move != null)
+                    DoMove(move);
+            }
         }
 
         Board.Display();
         AnnounceResult();
     }
 
-    //  Move execution 
     protected virtual void DoMove(Move move)
     {
-        History.Execute(new MoveCommand(move, Board));
+        Board snapshot = Board.Clone();
+        int mover = CurrentIdx;
 
-        if      (CheckWin())   { Winner = Current; GameOver = true; }
-        else if (!HasMoves())  { GameOver = true; }
-        else CurrentIdx = (CurrentIdx + 1) % Players.Length;
+        Board.ApplyMove(move);
+        History.RecordMove(move, snapshot, mover);
+
+        FinalizeAfterMove(mover);
     }
 
-    //  Undo / Redo 
+    private void ApplyMoveWithoutRecording(Move move)
+    {
+        Board.ApplyMove(move);
+    }
+
+    private void FinalizeAfterMove(int playerWhoMoved)
+    {
+        if (CheckWin())
+        {
+            Winner   = Players[playerWhoMoved];
+            GameOver = true;
+        }
+        else if (!HasMoves())
+        {
+            GameOver = true;
+        }
+        else
+        {
+            CurrentIdx = (CurrentIdx + 1) % Players.Length;
+        }
+    }
+
+    protected void RestoreBoard(Board snapshot)
+    {
+        Board.Deserialize(snapshot.Serialize());
+    }
+
     public void Undo()
     {
-        if (!History.CanUndo()) { Console.WriteLine("Nothing to undo."); return; }
-        History.Undo();
-        CurrentIdx = (CurrentIdx - 1 + Players.Length) % Players.Length;
-        GameOver = false; Winner = null;
+        if (IsHvCMode)
+            UndoHvC();
+        else
+            UndoHvH();
+    }
+
+    private void UndoHvH()
+    {
+        if (!History.CanUndo(hvc: false))
+        {
+            Console.WriteLine("Nothing to undo.");
+            return;
+        }
+
+        var undone = History.UndoSingle();
+        if (undone == null)
+        {
+            Console.WriteLine("Nothing to undo.");
+            return;
+        }
+
+        RestoreBoard(undone.BoardSnapshot);
+        CurrentIdx = undone.PlayerIndex;
+        GameOver   = false;
+        Winner     = null;
+        Console.WriteLine("Move undone.");
+    }
+
+    private void UndoHvC()
+    {
+        if (!History.CanUndo(hvc: true))
+        {
+            Console.WriteLine("Nothing to undo.");
+            return;
+        }
+
+        if (!History.UndoRound(out var humanMove, out _))
+        {
+            Console.WriteLine("Nothing to undo.");
+            return;
+        }
+
+        RestoreBoard(humanMove!.BoardSnapshot);
+        CurrentIdx = humanMove.PlayerIndex;
+        GameOver   = false;
+        Winner     = null;
         Console.WriteLine("Move undone.");
     }
 
     public void Redo()
     {
-        if (!History.CanRedo()) { Console.WriteLine("Nothing to redo."); return; }
-        History.Redo();
-        CurrentIdx = (CurrentIdx + 1) % Players.Length;
+        if (IsHvCMode)
+            RedoHvC();
+        else
+            RedoHvH();
+    }
+
+    private void RedoHvH()
+    {
+        if (!History.CanRedo(hvc: false))
+        {
+            Console.WriteLine("Nothing to redo.");
+            return;
+        }
+
+        var redo = History.RedoSingle();
+        if (redo == null)
+        {
+            Console.WriteLine("Nothing to redo.");
+            return;
+        }
+
+        GameOver = false;
+        Winner   = null;
+
+        ApplyMoveWithoutRecording(redo.Move);
+        FinalizeAfterMove(redo.PlayerIndex);
         Console.WriteLine("Move redone.");
     }
 
-    //  Save 
+    private void RedoHvC()
+    {
+        if (!History.CanRedo(hvc: true))
+        {
+            Console.WriteLine("Nothing to redo.");
+            return;
+        }
+
+        if (!History.RedoRound(out var humanMove, out var computerMove))
+        {
+            Console.WriteLine("Nothing to redo.");
+            return;
+        }
+
+        GameOver = false;
+        Winner   = null;
+
+        ApplyMoveWithoutRecording(humanMove!.Move);
+        ApplyMoveWithoutRecording(computerMove!.Move);
+
+        if (CheckWin())
+        {
+            Winner   = Players[computerMove.PlayerIndex];
+            GameOver = true;
+        }
+        else if (!HasMoves())
+        {
+            GameOver = true;
+        }
+        else
+        {
+            CurrentIdx = HumanPlayerIndex;
+        }
+
+        Console.WriteLine("Move redone.");
+    }
+
     public void SaveGame()
     {
         Console.Write("Filename (no extension): ");
@@ -97,11 +254,9 @@ public abstract class Game
         Console.WriteLine("Game saved.");
     }
 
-    //  Help 
     private void ShowHelp()
     {
         Console.WriteLine("\n--- Help ---");
-        Console.WriteLine("  M  Make a move");
         Console.WriteLine("  U  Undo last move");
         Console.WriteLine("  R  Redo undone move");
         Console.WriteLine("  S  Save game");
@@ -110,20 +265,23 @@ public abstract class Game
         Console.WriteLine();
     }
 
-    protected virtual void ShowGameHelp() { }   // OCP: each game can add tips
+    public virtual void ShowTurnInfo(Player currentPlayer)
+    {
+        Console.WriteLine("Enter Your Move [row <space> col (e.g. 1 2)] or Commands:  U=Undo  R=Redo  S=Save  H=Help");
+    }
 
-    //  Result 
+    protected virtual void ShowGameHelp() { }
+
     protected virtual void AnnounceResult()
         => Console.WriteLine(Winner != null
             ? $"\n*** {Winner.Name} wins! ***"
             : "\n*** Draw! ***");
 
-    //  Abstract hooks 
     protected abstract void       SetupBoard();
     protected abstract bool       CheckWin();
     protected abstract bool       HasMoves();
     public    abstract List<Move> GetValidMoves();
-    public    abstract Move       PromptHumanMove(Player p);
+    public    abstract Move?      PromptHumanMove(Player p, string input);
     public    abstract bool       CheckWinOnBoard(Board b);
     public    abstract GameState  CreateGameState();
     public    abstract void       LoadFromState(GameState s);

@@ -1,61 +1,92 @@
 using BoardGame.Core;
 
 namespace BoardGame.Moves;
-public interface ICommand { void Execute(); void Undo(); }
 
-
-public class MoveCommand : ICommand
+public class RecordedMove
 {
-    public  Move  Move   { get; }
-    private Board _board;
+    public Move   Move           { get; }
+    public Board  BoardSnapshot  { get; }
+    public int    PlayerIndex    { get; }
 
-    public MoveCommand(Move move, Board board) { Move = move; _board = board; }
-
-    public void Execute() => _board.ApplyMove(Move);
-    public void Undo()    => _board.UndoMove(Move);
+    public RecordedMove(Move move, Board boardSnapshot, int playerIndex)
+    {
+        Move          = move;
+        BoardSnapshot = boardSnapshot;
+        PlayerIndex   = playerIndex;
+    }
 }
+
 public class MoveHistory
 {
-    private readonly Stack<ICommand> _undo = new();
-    private readonly Stack<ICommand> _redo = new();
+    private readonly Stack<RecordedMove> _past   = new();
+    private readonly Stack<RecordedMove> _future = new();
 
-    public bool CanUndo() => _undo.Count > 0;
-    public bool CanRedo() => _redo.Count > 0;
-    public int  Count     => _undo.Count;
+    public int PastCount   => _past.Count;
+    public int FutureCount => _future.Count;
 
-    public void Execute(ICommand cmd)
+    public bool CanUndo(bool hvc) => hvc ? _past.Count >= 2 : _past.Count >= 1;
+    public bool CanRedo(bool hvc) => hvc ? _future.Count >= 2 : _future.Count >= 1;
+
+    public void RecordMove(Move move, Board boardBefore, int playerIndex)
     {
-        cmd.Execute();
-        _undo.Push(cmd);
-        _redo.Clear();          // new move invalidates redo stack
+        _past.Push(new RecordedMove(move, boardBefore, playerIndex));
+        _future.Clear();
     }
 
-    public void Undo()
+    public RecordedMove? UndoSingle()
     {
-        if (!CanUndo()) return;
-        var c = _undo.Pop();
-        c.Undo();
-        _redo.Push(c);
+        if (_past.Count == 0) return null;
+        var undone = _past.Pop();
+        _future.Push(undone);
+        return undone;
     }
 
-    public void Redo()
+    public bool UndoRound(out RecordedMove? humanMove, out RecordedMove? computerMove)
     {
-        if (!CanRedo()) return;
-        var c = _redo.Pop();
-        c.Execute();
-        _undo.Push(c);
+        humanMove = computerMove = null;
+        if (_past.Count < 2) return false;
+
+        computerMove = _past.Pop();
+        humanMove    = _past.Pop();
+        _future.Push(computerMove);
+        _future.Push(humanMove);
+        return true;
     }
 
-    // Returns moves in chronological order (oldest first)
+    public RecordedMove? RedoSingle()
+    {
+        if (_future.Count == 0) return null;
+        var redo = _future.Pop();
+        _past.Push(redo);
+        return redo;
+    }
+
+    public bool RedoRound(out RecordedMove? humanMove, out RecordedMove? computerMove)
+    {
+        humanMove = computerMove = null;
+        if (_future.Count < 2) return false;
+
+        humanMove    = _future.Pop();
+        computerMove = _future.Pop();
+        _past.Push(humanMove);
+        _past.Push(computerMove);
+        return true;
+    }
+
     public List<Move> GetHistory() =>
-        _undo.Select(c => ((MoveCommand)c).Move).Reverse().ToList();
+        _past.Reverse().Select(r => r.Move).ToList();
 
-    // Board already reflects saved moves — rebuild stacks without re-applying
-    public void Restore(IReadOnlyList<Move> moves, Board board)
+    public void RebuildFromMoves(IReadOnlyList<Move> moves, Board board)
     {
-        _undo.Clear();
-        _redo.Clear();
+        _past.Clear();
+        _future.Clear();
+
         foreach (var move in moves)
-            _undo.Push(new MoveCommand(move, board));
+        {
+            var snapshot = board.Clone();
+            board.ApplyMove(move);
+            int player = move.PlayerIndex;
+            _past.Push(new RecordedMove(move, snapshot, player));
+        }
     }
 }

@@ -55,3 +55,7 @@ coverage*.info
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# saved file
+*.json
+*.txt

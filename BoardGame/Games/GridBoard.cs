@@ -71,26 +71,70 @@ public class GridBoard : Board
         return true;
     }
 
-    public override void Display()
-    {
-        // Column header
-        Console.Write("   ");
-        for (int c = 0; c < Cols; c++) Console.Write($" {c + 1}");
-        Console.WriteLine();
+    // public override void Display()
+    // {
+    //     // Column header
+    //     Console.Write("   ");
+    //     for (int c = 0; c < Cols; c++) Console.Write($" {c + 1}");
+    //     Console.WriteLine();
 
-        for (int r = 0; r < Rows; r++)
+    //     for (int r = 0; r < Rows; r++)
+    //     {
+    //         Console.Write($" {r + 1} ");
+    //         for (int c = 0; c < Cols; c++)
+    //             Console.Write($" {Cells[r, c]}");
+    //         Console.WriteLine();
+    //     }
+    // }
+    public override void Display()
+{
+    Console.WriteLine();
+
+    string border = "+" + new string('-', Cols * 4 - 1) + "+";
+    bool isConnectFour = Rows == 6 && Cols == 7;
+
+    Console.WriteLine(border);
+
+    for (int r = 0; r < Rows; r++)
+    {
+        Console.Write("|");
+
+        for (int c = 0; c < Cols; c++)
         {
-            Console.Write($" {r + 1} ");
-            for (int c = 0; c < Cols; c++)
-                Console.Write($" {Cells[r, c]}");
-            Console.WriteLine();
+            char cell = Cells[r, c];
+
+            if (cell == '.' || cell == ' ' || cell == '\0')
+                Console.Write("   |");
+            else
+                Console.Write($" {cell} |");
+        }
+
+        Console.WriteLine($"   row {Rows - r}");
+
+        if (!isConnectFour && r < Rows - 1)
+        {
+            Console.WriteLine(new string('-', Cols * 4 + 1));
         }
     }
+
+    Console.WriteLine(border);
+
+    Console.Write(" ");
+    for (int c = 1; c <= Cols; c++)
+    {
+        Console.Write($" {c}  ");
+    }
+
+    Console.WriteLine(" columns");
+    Console.WriteLine();
+}
 
     public override Board Clone()
     {
         var copy = new GridBoard(Rows, Cols, _empty);
-        Array.Copy(Cells, copy.Cells, Cells.Length);
+        for (int r = 0; r < Rows; r++)
+            for (int c = 0; c < Cols; c++)
+                copy.Cells[r, c] = Cells[r, c];
         return copy;
     }
 

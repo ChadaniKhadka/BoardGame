@@ -58,31 +58,36 @@ public class NotaktoGame : BaseGame
         return moves;
     }
 
-    // Override prompt — no symbol choice, both use X
-    public override Move PromptHumanMove(Player p)
+  
+    // Validate row and column input. Both players place X.
+    public override Move? PromptHumanMove(Player p, string input)
     {
-        while (true)
-        {
-            Console.Write("  Enter row col (e.g. 1 2): ");
-            string? line = Console.ReadLine()?.Trim();
-            var parts = line?.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
-            if (parts?.Length == 2
-                && int.TryParse(parts[0], out int row)
-                && int.TryParse(parts[1], out int col)
-                && row >= 1 && row <= 3
-                && col >= 1 && col <= 3
-                && Grid.IsEmpty(row - 1, col - 1))
+        if (parts.Length == 2
+            && int.TryParse(parts[0], out int row)
+            && int.TryParse(parts[1], out int col)
+            && row >= 1 && row <= 3
+            && col >= 1 && col <= 3
+            && Grid.IsEmpty(row - 1, col - 1))
+        {
+            return new GridMove
             {
-                return new GridMove
-                {
-                    PlayerIndex = p.Index,
-                    Row = row - 1, Col = col - 1,
-                    Value = 'X'
-                };
-            }
-            Console.WriteLine("  Invalid or occupied — try again.");
+                PlayerIndex = p.Index,
+                Row = row - 1,
+                Col = col - 1,
+                Value = 'X'
+            };
         }
+
+        Console.WriteLine("Invalid or occupied cell — enter row and column. Example: 1 2");
+        return null;
+    }
+
+    public override void ShowTurnInfo(Player currentPlayer)
+    {
+        Console.WriteLine("Both players place X. Completing 3 in a row loses.");
+        Console.WriteLine("Enter Your Move [row <space> col (e.g. 1 2)] or Commands:  U=Undo  R=Redo  S=Save  H=Help");
     }
 
     protected override void ShowGameHelp()
