@@ -47,19 +47,19 @@ public static class GameFactory
     //  Build players from user input ─
     public static Player[] BuildPlayers(string mode)
     {
-        string n1 = Prompt("Player 1", "Alice");
-        Player p1 = new HumanPlayer(n1, 'X', 0);
+        Player p1 = new HumanPlayer("P1", 'X', 0);
+
         Player p2 = mode == "2"
-            ? new ComputerPlayer("Computer", 'O', 1)
-            : new HumanPlayer(Prompt("Player 2 name", "Bob"), 'O', 1);
+            ? new ComputerPlayer("P2", 'O', 1)
+            : new HumanPlayer("P2", 'O', 1);
+
         return [p1, p2];
     }
-
     //  Helper ─
-    private static string Prompt(string label, string fallback)
-    {
-        Console.Write($"  {label} (default '{fallback}'): ");
-        string v = Console.ReadLine()?.Trim() ?? "";
-        return string.IsNullOrWhiteSpace(v) ? fallback : v;
-    }
+    // private static string Prompt(string label, string fallback)
+    // {
+    //     Console.Write($"  {label} (default '{fallback}'): ");
+    //     string v = Console.ReadLine()?.Trim() ?? "";
+    //     return string.IsNullOrWhiteSpace(v) ? fallback : v;
+    // }
 }

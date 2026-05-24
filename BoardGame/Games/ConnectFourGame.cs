@@ -40,28 +40,33 @@ public class ConnectFourGame : BaseGame
         }
         return moves;
     }
-    public override Move PromptHumanMove(Player p)
-    {
-        while (true)
-        {
-            Console.Write($"  Enter column (1-{Grid.Cols}): ");
-            string? line = Console.ReadLine()?.Trim();
+    public override void ShowTurnInfo(Player currentPlayer)
+{
+    Console.WriteLine($"Enter Your Move [column from 1-{Grid.Cols}] or Commands:  U=Undo  R=Redo  S=Save  H=Help");
+}
 
-            if (int.TryParse(line, out int col)
-                && col >= 1 && col <= Grid.Cols)
+public override Move? PromptHumanMove(Player p, string input)
+{
+    if (int.TryParse(input, out int col)
+        && col >= 1 && col <= Grid.Cols)
+    {
+        int row = DropRow(col - 1);
+
+        if (row >= 0)
+        {
+            return new GridMove
             {
-                int r = DropRow(col - 1);
-                if (r >= 0)
-                    return new GridMove
-                    {
-                        PlayerIndex = p.Index,
-                        Row = r, Col = col - 1,
-                        Value = p.Symbol
-                    };
-            }
-            Console.WriteLine("  Column full or invalid — try again.");
+                PlayerIndex = p.Index,
+                Row = row,
+                Col = col - 1,
+                Value = p.Symbol
+            };
         }
     }
+
+    Console.WriteLine($"Column full or invalid — enter a column number from 1 to {Grid.Cols}.");
+    return null;
+}
 
     protected override void ShowGameHelp()
         => Console.WriteLine("  Enter a column number 1-7. Pieces fall to the bottom.");

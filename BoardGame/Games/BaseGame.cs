@@ -33,30 +33,27 @@ public abstract class BaseGame : Game
 
     //  Common prompt ─
     // Subclasses override only when they need different input (e.g. Numerical)
-    public override Move PromptHumanMove(Player p)
+    public override Move? PromptHumanMove(Player p, string input)
     {
-        while (true)
-        {
-            Console.Write($"  Enter row col (e.g. 1 2): ");
-            string? line = Console.ReadLine()?.Trim();
-            var parts = line?.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
-            if (parts?.Length == 2
-                && int.TryParse(parts[0], out int row)
-                && int.TryParse(parts[1], out int col)
-                && row >= 1 && row <= Grid.Rows
-                && col >= 1 && col <= Grid.Cols
-                && Grid.IsEmpty(row - 1, col - 1))
+        if (parts.Length == 2
+            && int.TryParse(parts[0], out int row)
+            && int.TryParse(parts[1], out int col)
+            && row >= 1 && row <= Grid.Rows
+            && col >= 1 && col <= Grid.Cols
+            && Grid.IsEmpty(row - 1, col - 1))
+        {
+            return new GridMove
             {
-                return new GridMove
-                {
-                    PlayerIndex = p.Index,
-                    Row         = row - 1,
-                    Col         = col - 1,
-                    Value       = p.Symbol
-                };
-            }
-            Console.WriteLine("  Invalid or occupied cell — try again.");
+                PlayerIndex = p.Index,
+                Row         = row - 1,
+                Col         = col - 1,
+                Value       = p.Symbol
+            };
         }
+
+        Console.WriteLine("  Invalid or occupied cell — try again.");
+        return null;
     }
 }

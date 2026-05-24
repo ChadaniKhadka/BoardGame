@@ -24,29 +24,56 @@ public abstract class Game
             SetupBoard();
         _resumeFromSave = false;
 
-        Console.WriteLine($"\n=== {GameName} ===");
-        Console.WriteLine("Commands: M=Move  U=Undo  R=Redo  S=Save  H=Help\n");
+        Console.WriteLine($"\n========== {GameName} ==========");
 
         while (!GameOver)
         {
             Board.Display();
-            Console.WriteLine($"\n{Current.Name}'s turn [{Current.Symbol}]");
 
             if (Current is Players.HumanPlayer)
             {
-                Console.Write("Action: ");
-                string cmd = (Console.ReadLine() ?? "m").Trim().ToLower();
-                switch (cmd)
+                Console.WriteLine($"\nPlayer {CurrentIdx + 1}'s turn");
+
+                ShowTurnInfo(Current);
+
+                Console.Write($"P{CurrentIdx + 1}> ");
+
+                string input = Console.ReadLine()?.Trim() ?? "";
+
+                switch (input.ToLower())
                 {
-                    case "u": Undo();     continue;
-                    case "r": Redo();     continue;
-                    case "s": SaveGame(); continue;
-                    case "h": ShowHelp(); continue;
+                    case "u":
+                        Undo();
+                        continue;
+
+                    case "r":
+                        Redo();
+                        continue;
+
+                    case "s":
+                        SaveGame();
+                        continue;
+
+                    case "h":
+                        ShowHelp();
+                        continue;
+                }
+
+                Move? move = PromptHumanMove(Current, input);
+                if (move != null)
+                {
+                    DoMove(move);
                 }
             }
-
-            Move? move = Current.GetMove(Board, this);
-            if (move != null) DoMove(move);
+            else
+            {
+                Console.WriteLine($"\nPlayer {CurrentIdx + 1}'s turn");
+                Move? move = Current.GetMove(Board, this);
+                if (move != null)
+                {
+                    DoMove(move);
+                }
+            }
         }
 
         Board.Display();
@@ -101,13 +128,17 @@ public abstract class Game
     private void ShowHelp()
     {
         Console.WriteLine("\n--- Help ---");
-        Console.WriteLine("  M  Make a move");
         Console.WriteLine("  U  Undo last move");
         Console.WriteLine("  R  Redo undone move");
         Console.WriteLine("  S  Save game");
         Console.WriteLine("  H  Show this help");
         ShowGameHelp();
         Console.WriteLine();
+    }
+
+    public virtual void ShowTurnInfo(Player currentPlayer)
+    {
+        Console.WriteLine("Enter Your Move [row <space> col (e.g. 1 2)] or Commands:  U=Undo  R=Redo  S=Save  H=Help");
     }
 
     protected virtual void ShowGameHelp() { }   // OCP: each game can add tips
@@ -123,7 +154,7 @@ public abstract class Game
     protected abstract bool       CheckWin();
     protected abstract bool       HasMoves();
     public    abstract List<Move> GetValidMoves();
-    public    abstract Move       PromptHumanMove(Player p);
+    public abstract Move? PromptHumanMove(Player p, string input);
     public    abstract bool       CheckWinOnBoard(Board b);
     public    abstract GameState  CreateGameState();
     public    abstract void       LoadFromState(GameState s);
