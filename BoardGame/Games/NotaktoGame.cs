@@ -28,7 +28,7 @@ public class NotaktoGame : BaseGame
         if (Winner != null)
         {
             // Winner here is the one who completed the line — they actually lose
-            var loser  = Winner;
+            var loser = Winner;
             var winner = Players.First(p => p != loser);
             Console.WriteLine($"\n*** {winner.Name} wins! ({loser.Name} completed a line) ***");
         }
@@ -52,13 +52,14 @@ public class NotaktoGame : BaseGame
                     moves.Add(new GridMove
                     {
                         PlayerIndex = CurrentIdx,
-                        Row = r, Col = c,
+                        Row = r,
+                        Col = c,
                         Value = 'X'
                     });
         return moves;
     }
 
-  
+
     // Validate row and column input. Both players place X.
     public override Move? PromptHumanMove(Player p, string input)
     {
@@ -87,7 +88,7 @@ public class NotaktoGame : BaseGame
     public override void ShowTurnInfo(Player currentPlayer)
     {
         Console.WriteLine("Both players place X. Completing 3 in a row loses.");
-        Console.WriteLine("Enter Your Move [row <space> col (e.g. 1 2)] or Commands:  U=Undo  R=Redo  S=Save  H=Help");
+        Console.WriteLine("Enter Your Move [row <space> col (e.g. 1 2)] or Commands:  U=Undo  R=Redo  S=Save  H=Help  E=Exit");
     }
 
     protected override void ShowGameHelp()

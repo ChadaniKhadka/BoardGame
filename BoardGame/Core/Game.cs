@@ -6,13 +6,13 @@ namespace BoardGame.Core;
 
 public abstract class Game
 {
-    protected Board     Board     = null!;
-    protected Player[]  Players;
-    protected int       CurrentIdx;
-    protected bool      GameOver;
-    protected Player?   Winner;
+    protected Board Board = null!;
+    protected Player[] Players;
+    protected int CurrentIdx;
+    protected bool GameOver;
+    protected Player? Winner;
     protected MoveHistory History = new();
-    protected bool        _resumeFromSave;
+    protected bool _resumeFromSave;
 
     public abstract string GameName { get; }
     protected Player Current => Players[CurrentIdx];
@@ -32,7 +32,8 @@ public abstract class Game
 
         Console.WriteLine($"\n========== {GameName} ==========");
 
-        while (!GameOver)
+        bool exitRequested = false;
+        while (!GameOver && !exitRequested)
         {
             Board.Display();
 
@@ -63,6 +64,10 @@ public abstract class Game
                     case "h":
                         ShowHelp();
                         continue;
+
+                    case "e":
+                        exitRequested = ExitGame();
+                        continue;
                 }
 
                 Move? move = PromptHumanMove(Current, input);
@@ -78,8 +83,11 @@ public abstract class Game
             }
         }
 
-        Board.Display();
-        AnnounceResult();
+        if (GameOver)
+        {
+            Board.Display();
+            AnnounceResult();
+        }
     }
 
     protected virtual void DoMove(Move move)
@@ -102,7 +110,7 @@ public abstract class Game
     {
         if (CheckWin())
         {
-            Winner   = Players[playerWhoMoved];
+            Winner = Players[playerWhoMoved];
             GameOver = true;
         }
         else if (!HasMoves())
@@ -145,8 +153,8 @@ public abstract class Game
 
         RestoreBoard(undone.BoardSnapshot);
         CurrentIdx = undone.PlayerIndex;
-        GameOver   = false;
-        Winner     = null;
+        GameOver = false;
+        Winner = null;
         Console.WriteLine("Move undone.");
     }
 
@@ -166,8 +174,8 @@ public abstract class Game
 
         RestoreBoard(humanMove!.BoardSnapshot);
         CurrentIdx = humanMove.PlayerIndex;
-        GameOver   = false;
-        Winner     = null;
+        GameOver = false;
+        Winner = null;
         Console.WriteLine("Move undone.");
     }
 
@@ -195,7 +203,7 @@ public abstract class Game
         }
 
         GameOver = false;
-        Winner   = null;
+        Winner = null;
 
         ApplyMoveWithoutRecording(redo.Move);
         FinalizeAfterMove(redo.PlayerIndex);
@@ -217,14 +225,14 @@ public abstract class Game
         }
 
         GameOver = false;
-        Winner   = null;
+        Winner = null;
 
         ApplyMoveWithoutRecording(humanMove!.Move);
         ApplyMoveWithoutRecording(computerMove!.Move);
 
         if (CheckWin())
         {
-            Winner   = Players[computerMove.PlayerIndex];
+            Winner = Players[computerMove.PlayerIndex];
             GameOver = true;
         }
         else if (!HasMoves())
@@ -261,13 +269,32 @@ public abstract class Game
         Console.WriteLine("  R  Redo undone move");
         Console.WriteLine("  S  Save game");
         Console.WriteLine("  H  Show this help");
+        Console.WriteLine("  E  Exit to main menu");
         ShowGameHelp();
         Console.WriteLine();
     }
 
+    private bool ExitGame()
+    {
+        Console.Write("\n  Exit to main menu? (y/n): ");
+        string confirm = Console.ReadLine()?.Trim().ToLower() ?? "n";
+        if (confirm != "y") return false;
+
+        if (History.PastCount > 0)
+        {
+            Console.Write("  You have unsaved progress. Save before exiting? (y/n): ");
+            string save = Console.ReadLine()?.Trim().ToLower() ?? "n";
+            if (save == "y")
+                SaveGame();
+        }
+
+        Console.WriteLine("  Returning to main menu...");
+        return true;
+    }
+
     public virtual void ShowTurnInfo(Player currentPlayer)
     {
-        Console.WriteLine("Enter Your Move [row <space> col (e.g. 1 2)] or Commands:  U=Undo  R=Redo  S=Save  H=Help");
+        Console.WriteLine("Enter Your Move [row <space> col (e.g. 1 2)] or Commands:  U=Undo  R=Redo  S=Save  H=Help  E=Exit");
     }
 
     protected virtual void ShowGameHelp() { }
@@ -277,12 +304,12 @@ public abstract class Game
             ? $"\n*** {Winner.Name} wins! ***"
             : "\n*** Draw! ***");
 
-    protected abstract void       SetupBoard();
-    protected abstract bool       CheckWin();
-    protected abstract bool       HasMoves();
-    public    abstract List<Move> GetValidMoves();
-    public    abstract Move?      PromptHumanMove(Player p, string input);
-    public    abstract bool       CheckWinOnBoard(Board b);
-    public    abstract GameState  CreateGameState();
-    public    abstract void       LoadFromState(GameState s);
+    protected abstract void SetupBoard();
+    protected abstract bool CheckWin();
+    protected abstract bool HasMoves();
+    public abstract List<Move> GetValidMoves();
+    public abstract Move? PromptHumanMove(Player p, string input);
+    public abstract bool CheckWinOnBoard(Board b);
+    public abstract GameState CreateGameState();
+    public abstract void LoadFromState(GameState s);
 }
