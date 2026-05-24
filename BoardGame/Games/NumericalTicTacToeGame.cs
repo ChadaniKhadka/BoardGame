@@ -18,6 +18,24 @@ public class NumericalTicTacToeGame : BaseGame
         _used.Clear();
     }
 
+    public override void LoadFromState(GameState s)
+    {
+        base.LoadFromState(s);
+        RebuildUsed();
+    }
+
+    protected override void OnBoardRestored() => RebuildUsed();
+
+    private void RebuildUsed()
+    {
+        _used.Clear();
+        for (int r = 0; r < Grid.Rows; r++)
+            for (int c = 0; c < Grid.Cols; c++)
+                if (Grid.Cells[r, c] != '.' && int.TryParse(
+                    Grid.Cells[r, c].ToString(), out int n))
+                    _used.Add(n);
+    }
+
     private bool IsOdd(int playerIdx) => playerIdx == 0;
 
     private IEnumerable<int> AvailableNumbers(int playerIdx)

@@ -125,4 +125,9 @@ public static class SaveStrategyFactory
         filename.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
             ? new JsonSaveStrategy()
             : new TextSaveStrategy();
+
+    public static ISaveStrategy ForFormat(string format) =>
+        format.ToLower() == "json"
+            ? (ISaveStrategy)new JsonSaveStrategy()
+            : new TextSaveStrategy();
 }

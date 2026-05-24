@@ -29,7 +29,7 @@ public abstract class Player
     protected Player(string name, char symbol, int index)
     { Name = name; Symbol = symbol; Index = index; }
 
-    public abstract Move GetMove(Board board, Game game);
+    public abstract Move? GetMove(Board board, Game game);
 }
 
 // GameState (save / load) 

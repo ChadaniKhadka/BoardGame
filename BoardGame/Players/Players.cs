@@ -9,10 +9,7 @@ public class HumanPlayer : Player
     public HumanPlayer(string name, char symbol, int index)
         : base(name, symbol, index) { }
 
-    public override Move GetMove(Board board, Game game)
-    {
-        throw new InvalidOperationException("Human moves are handled by the game input loop.");
-    }
+    public override Move? GetMove(Board board, Game game) => null;
 }
 
 // SRP: ComputerPlayer only chooses a move — win-check logic lives in the game
@@ -23,7 +20,7 @@ public class ComputerPlayer : Player
     public ComputerPlayer(string name, char symbol, int index)
         : base(name, symbol, index) { }
 
-    public override Move GetMove(Board board, Game game)
+    public override Move? GetMove(Board board, Game game)
     {
         Console.WriteLine($"  {Name} is thinking...");
         Thread.Sleep(400);

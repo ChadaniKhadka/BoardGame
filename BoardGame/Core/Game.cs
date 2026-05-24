@@ -115,9 +115,12 @@ public abstract class Game
         }
     }
 
+    protected virtual void OnBoardRestored() { }
+
     protected void RestoreBoard(Board snapshot)
     {
         Board.Deserialize(snapshot.Serialize());
+        OnBoardRestored();
     }
 
     public void Undo()
@@ -242,15 +245,12 @@ public abstract class Game
     public void SaveGame()
     {
         Console.Write("Filename (no extension): ");
-        string name = Console.ReadLine()?.Trim() ?? "save";
+        string filename = Console.ReadLine()?.Trim() ?? "save";
         Console.Write("Format [T]xt / [J]son: ");
-        string fmt = Console.ReadLine()?.Trim().ToLower() ?? "t";
+        string format = Console.ReadLine()?.Trim() ?? "t";
 
-        ISaveStrategy strategy = fmt.StartsWith('j')
-            ? new JsonSaveStrategy()
-            : new TextSaveStrategy();
-
-        strategy.Save(CreateGameState(), name);
+        ISaveStrategy strategy = SaveStrategyFactory.ForFormat(format);
+        strategy.Save(CreateGameState(), filename);
         Console.WriteLine("Game saved.");
     }
 
