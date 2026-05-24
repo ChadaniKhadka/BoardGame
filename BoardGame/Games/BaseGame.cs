@@ -24,11 +24,12 @@ public abstract class BaseGame : Game
     {
         _resumeFromSave = true;
         SetupBoard();
+        Board emptyBoard = Board.Clone();
         Board.Deserialize(s.BoardData);
         CurrentIdx = s.CurrentPlayerIndex;
 
         var moves = s.MoveHistory.Select(GridMove.Deserialize).Cast<Move>().ToList();
-        History.Restore(moves, Board);
+        History.RebuildFromMoves(moves, emptyBoard);
     }
 
     //  Common prompt ─

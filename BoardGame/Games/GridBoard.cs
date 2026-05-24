@@ -132,7 +132,9 @@ public class GridBoard : Board
     public override Board Clone()
     {
         var copy = new GridBoard(Rows, Cols, _empty);
-        Array.Copy(Cells, copy.Cells, Cells.Length);
+        for (int r = 0; r < Rows; r++)
+            for (int c = 0; c < Cols; c++)
+                copy.Cells[r, c] = Cells[r, c];
         return copy;
     }
 
