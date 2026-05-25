@@ -88,7 +88,8 @@ public class NumericalTicTacToeGame : BaseGame
                         moves.Add(new GridMove
                         {
                             PlayerIndex = CurrentIdx,
-                            Row = r, Col = c,
+                            Row = r,
+                            Col = c,
                             Value = (char)('0' + n)
                         });
         return moves;
@@ -107,7 +108,7 @@ public class NumericalTicTacToeGame : BaseGame
         var available = AvailableNumbers(currentPlayer.Index).ToList();
 
         Console.WriteLine($"Your numbers: {string.Join(", ", available)}");
-        Console.WriteLine("Enter Your Move [number <space> row <space> col (e.g. 5 2 3)] or Commands:  U=Undo  R=Redo  S=Save  H=Help");
+        Console.WriteLine("Enter Your Move [number <space> row <space> col (e.g. 5 2 3)] or Commands:  U=Undo  R=Redo  S=Save  H=Help  E=Exit");
     }
 
     // Override PromptHumanMove to ask for number + cell

@@ -33,7 +33,7 @@ namespace BoardGame
                         break;
 
                     case "3":
-                        running = false;
+                        running = !ExitGame();
                         break;
 
                     default:
@@ -43,6 +43,12 @@ namespace BoardGame
             }
 
             Console.WriteLine("\n  Goodbye!\n");
+        }
+
+        private static bool ExitGame()
+        {
+            Console.Write("  Are you sure you want to exit? (y/n): ");
+            return (Console.ReadLine()?.Trim().ToLower() ?? "n") == "y";
         }
 
         // New Game
