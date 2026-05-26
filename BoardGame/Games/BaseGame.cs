@@ -2,22 +2,22 @@ using BoardGame.Core;
 using BoardGame.Players;
 
 namespace BoardGame.Games;
+
 public abstract class BaseGame : Game
 {
     protected GridBoard Grid => (GridBoard)Board;
 
     protected BaseGame(Player[] players) : base(players) { }
 
-    //  Common save/load 
     public override GameState CreateGameState() => new()
     {
-        GameType           = GameName.ToLower().Replace(" ", "").Replace("-", ""),
-        BoardData          = Board.Serialize(),
+        GameType = GameName.ToLower().Replace(" ", "").Replace("-", ""),
+        BoardData = Board.Serialize(),
         CurrentPlayerIndex = CurrentIdx,
-        PlayerNames        = Players.Select(p => p.Name).ToArray(),
-        PlayerSymbols      = Players.Select(p => p.Symbol).ToArray(),
-        PlayerTypes        = Players.Select(p => p is ComputerPlayer ? "Computer" : "Human").ToArray(),
-        MoveHistory        = History.GetHistory().Select(m => m.Serialize()).ToList()
+        PlayerNames = Players.Select(p => p.Name).ToArray(),
+        PlayerSymbols = Players.Select(p => p.Symbol).ToArray(),
+        PlayerTypes = Players.Select(p => p is ComputerPlayer ? "Computer" : "Human").ToArray(),
+        MoveHistory = History.GetHistory().Select(m => m.Serialize()).ToList()
     };
 
     public override void LoadFromState(GameState s)
@@ -28,15 +28,13 @@ public abstract class BaseGame : Game
         Board.Deserialize(s.BoardData);
         CurrentIdx = s.CurrentPlayerIndex;
 
-        var moves = s.MoveHistory.Select(GridMove.Deserialize).Cast<Move>().ToList();
+        List<Move> moves = s.MoveHistory.Select(GridMove.Deserialize).Cast<Move>().ToList();
         History.RebuildFromMoves(moves, emptyBoard);
     }
 
-    //  Common prompt ─
-    // Subclasses override only when they need different input (e.g. Numerical)
     public override Move? PromptHumanMove(Player p, string input)
     {
-        var parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        string[] parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
         if (parts.Length == 2
             && int.TryParse(parts[0], out int row)
@@ -48,9 +46,9 @@ public abstract class BaseGame : Game
             return new GridMove
             {
                 PlayerIndex = p.Index,
-                Row         = row - 1,
-                Col         = col - 1,
-                Value       = p.Symbol
+                Row = row - 1,
+                Col = col - 1,
+                Value = p.Symbol
             };
         }
 

@@ -4,43 +4,50 @@ namespace BoardGame.Games;
 
 public class ConnectFourGame : BaseGame
 {
+    private const int BoardRows = 6;
+    private const int BoardCols = 7;
+    private const int WinLength = 4;
+    private const int NoRow = -1;
+
     public override string GameName => "Connect Four";
 
     public ConnectFourGame(Player[] players) : base(players) { }
 
-    protected override void SetupBoard() => Board = new GridBoard(6, 7);
+    protected override void SetupBoard() => Board = new GridBoard(BoardRows, BoardCols);
+
     private int DropRow(int col)
     {
         for (int r = Grid.Rows - 1; r >= 0; r--)
             if (Grid.IsEmpty(r, col)) return r;
-        return -1;
+        return NoRow;
     }
 
     protected override bool CheckWin()
-        => WinChecker.HasLine(Grid, Current.Symbol, 4);
+        => WinChecker.HasLine(Grid, Current.Symbol, WinLength);
 
     protected override bool HasMoves() => !Grid.IsFull();
 
     public override bool CheckWinOnBoard(Board b)
-        => WinChecker.HasLine((GridBoard)b, Current.Symbol, 4);
+        => WinChecker.HasLine((GridBoard)b, Current.Symbol, WinLength);
 
     public override List<Move> GetValidMoves()
     {
-        var moves = new List<Move>();
+        List<Move> moves = new List<Move>();
         for (int c = 0; c < Grid.Cols; c++)
         {
-            int r = DropRow(c);
-            if (r >= 0)
+            int row = DropRow(c);
+            if (row >= 0)
                 moves.Add(new GridMove
                 {
                     PlayerIndex = CurrentIdx,
-                    Row = r,
+                    Row = row,
                     Col = c,
                     Value = Current.Symbol
                 });
         }
         return moves;
     }
+
     public override void ShowTurnInfo(Player currentPlayer)
     {
         Console.WriteLine($"Enter Your Move [column from 1-{Grid.Cols}] or Commands:  U=Undo  R=Redo  S=Save  H=Help  E=Exit");

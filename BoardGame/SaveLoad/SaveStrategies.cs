@@ -5,9 +5,9 @@ namespace BoardGame.SaveLoad;
 
 public interface ISaveStrategy
 {
-    void      Save(GameState state, string filename);
+    void Save(GameState state, string filename);
     GameState Load(string filename);
-    string    GetFileExtension();
+    string GetFileExtension();
 }
 
 public class TextSaveStrategy : ISaveStrategy
@@ -26,60 +26,84 @@ public class TextSaveStrategy : ISaveStrategy
         return Deserialise(File.ReadAllText(path));
     }
 
-    private string Serialise(GameState s)
+    private string Serialise(GameState state)
     {
-        var lines = new List<string>
-        {
-            $"GameType={s.GameType}",
-            $"BoardData={s.BoardData}",
-            $"CurrentIdx={s.CurrentPlayerIndex}",
-            $"Count={s.PlayerNames.Length}",
-        };
-
-        for (int i = 0; i < s.PlayerNames.Length; i++)
-        {
-            lines.Add($"N{i}={s.PlayerNames[i]}");
-            lines.Add($"S{i}={s.PlayerSymbols[i]}");
-            lines.Add($"T{i}={s.PlayerTypes[i]}");
-        }
-
-        lines.Add($"Moves={s.MoveHistory.Count}");
-        for (int i = 0; i < s.MoveHistory.Count; i++)
-            lines.Add($"M{i}={s.MoveHistory[i]}");
-
-        foreach (var kv in s.Extra)
-            lines.Add($"X_{kv.Key}={kv.Value}");
-
+        List<string> lines = BuildHeaderLines(state);
+        AppendPlayerLines(lines, state);
+        AppendMoveLines(lines, state);
+        AppendExtraLines(lines, state);
         return string.Join(Environment.NewLine, lines);
+    }
+
+    private static List<string> BuildHeaderLines(GameState state) =>
+    [
+        $"GameType={state.GameType}",
+        $"BoardData={state.BoardData}",
+        $"CurrentIdx={state.CurrentPlayerIndex}",
+        $"Count={state.PlayerNames.Length}",
+    ];
+
+    private static void AppendPlayerLines(List<string> lines, GameState state)
+    {
+        for (int i = 0; i < state.PlayerNames.Length; i++)
+        {
+            lines.Add($"N{i}={state.PlayerNames[i]}");
+            lines.Add($"S{i}={state.PlayerSymbols[i]}");
+            lines.Add($"T{i}={state.PlayerTypes[i]}");
+        }
+    }
+
+    private static void AppendMoveLines(List<string> lines, GameState state)
+    {
+        lines.Add($"Moves={state.MoveHistory.Count}");
+        for (int i = 0; i < state.MoveHistory.Count; i++)
+            lines.Add($"M{i}={state.MoveHistory[i]}");
+    }
+
+    private static void AppendExtraLines(List<string> lines, GameState state)
+    {
+        foreach (KeyValuePair<string, string> entry in state.Extra)
+            lines.Add($"X_{entry.Key}={entry.Value}");
     }
 
     private GameState Deserialise(string data)
     {
-        var d = data.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
-                    .Where(l => l.Contains('='))
-                    .ToDictionary(
-                        l => l[..l.IndexOf('=')],
-                        l => l[(l.IndexOf('=') + 1)..]);
+        Dictionary<string, string> fields = ParseFields(data);
+        int playerCount = int.Parse(fields.GetValueOrDefault("Count", "2"));
 
-        int n = int.Parse(d.GetValueOrDefault("Count", "2"));
-
-        var gs = new GameState
+        GameState gameState = new GameState
         {
-            GameType           = d.GetValueOrDefault("GameType", ""),
-            BoardData          = d.GetValueOrDefault("BoardData", ""),
-            CurrentPlayerIndex = int.Parse(d.GetValueOrDefault("CurrentIdx", "0")),
-            PlayerNames        = Enumerable.Range(0, n).Select(i => d[$"N{i}"]).ToArray(),
-            PlayerSymbols      = Enumerable.Range(0, n).Select(i => d[$"S{i}"][0]).ToArray(),
-            PlayerTypes        = Enumerable.Range(0, n).Select(i => d[$"T{i}"]).ToArray(),
+            GameType = fields.GetValueOrDefault("GameType", ""),
+            BoardData = fields.GetValueOrDefault("BoardData", ""),
+            CurrentPlayerIndex = int.Parse(fields.GetValueOrDefault("CurrentIdx", "0")),
+            PlayerNames = Enumerable.Range(0, playerCount).Select(i => fields[$"N{i}"]).ToArray(),
+            PlayerSymbols = Enumerable.Range(0, playerCount).Select(i => fields[$"S{i}"][0]).ToArray(),
+            PlayerTypes = Enumerable.Range(0, playerCount).Select(i => fields[$"T{i}"]).ToArray(),
         };
 
-        int mc = int.Parse(d.GetValueOrDefault("Moves", "0"));
-        for (int i = 0; i < mc; i++) gs.MoveHistory.Add(d[$"M{i}"]);
+        LoadMoveHistory(gameState, fields);
+        LoadExtraFields(gameState, fields);
+        return gameState;
+    }
 
-        foreach (var kv in d.Where(k => k.Key.StartsWith("X_")))
-            gs.Extra[kv.Key[2..]] = kv.Value;
+    private static Dictionary<string, string> ParseFields(string data) =>
+        data.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
+            .Where(line => line.Contains('='))
+            .ToDictionary(
+                line => line[..line.IndexOf('=')],
+                line => line[(line.IndexOf('=') + 1)..]);
 
-        return gs;
+    private static void LoadMoveHistory(GameState gameState, Dictionary<string, string> fields)
+    {
+        int moveCount = int.Parse(fields.GetValueOrDefault("Moves", "0"));
+        for (int i = 0; i < moveCount; i++)
+            gameState.MoveHistory.Add(fields[$"M{i}"]);
+    }
+
+    private static void LoadExtraFields(GameState gameState, Dictionary<string, string> fields)
+    {
+        foreach (KeyValuePair<string, string> entry in fields.Where(k => k.Key.StartsWith("X_")))
+            gameState.Extra[entry.Key[2..]] = entry.Value;
     }
 
     private string WithExtension(string filename) =>

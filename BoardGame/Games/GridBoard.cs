@@ -1,40 +1,45 @@
+using System.Text;
 using BoardGame.Core;
 
 namespace BoardGame.Games;
 
-//  GridMove 
 public class GridMove : Move
 {
-    public int  Row   { get; set; }
-    public int  Col   { get; set; }
-    public char Value { get; set; }  // symbol or digit placed
+    public int Row { get; set; }
+    public int Col { get; set; }
+    public char Value { get; set; }
 
     public override string Serialize() => $"{PlayerIndex},{Row},{Col},{Value}";
 
     public static GridMove Deserialize(string s)
     {
-        var p = s.Split(',');
+        string[] parts = s.Split(',');
         return new GridMove
         {
-            PlayerIndex = int.Parse(p[0]),
-            Row         = int.Parse(p[1]),
-            Col         = int.Parse(p[2]),
-            Value       = p[3][0]
+            PlayerIndex = int.Parse(parts[0]),
+            Row = int.Parse(parts[1]),
+            Col = int.Parse(parts[2]),
+            Value = parts[3][0]
         };
     }
 }
 
-//  GridBoard 
 public class GridBoard : Board
 {
-    public  int    Rows { get; }
-    public  int    Cols { get; }
-    public  char[,] Cells { get; private set; }
-    private char   _empty;
+    private const int ConnectFourRows = 6;
+    private const int ConnectFourCols = 7;
+    private const int CellDisplayWidth = 4;
+
+    public int Rows { get; }
+    public int Cols { get; }
+    public char[,] Cells { get; private set; }
+    private readonly char _empty;
 
     public GridBoard(int rows, int cols, char empty = '.')
     {
-        Rows = rows; Cols = cols; _empty = empty;
+        Rows = rows;
+        Cols = cols;
+        _empty = empty;
         Cells = new char[rows, cols];
         Reset();
     }
@@ -50,16 +55,16 @@ public class GridBoard : Board
 
     public override bool ApplyMove(Move move)
     {
-        var m = (GridMove)move;
-        if (!IsEmpty(m.Row, m.Col)) return false;
-        Cells[m.Row, m.Col] = m.Value;
+        GridMove gridMove = (GridMove)move;
+        if (!IsEmpty(gridMove.Row, gridMove.Col)) return false;
+        Cells[gridMove.Row, gridMove.Col] = gridMove.Value;
         return true;
     }
 
     public override bool UndoMove(Move move)
     {
-        var m = (GridMove)move;
-        Cells[m.Row, m.Col] = _empty;
+        GridMove gridMove = (GridMove)move;
+        Cells[gridMove.Row, gridMove.Col] = _empty;
         return true;
     }
 
@@ -71,67 +76,54 @@ public class GridBoard : Board
         return true;
     }
 
-    // public override void Display()
-    // {
-    //     // Column header
-    //     Console.Write("   ");
-    //     for (int c = 0; c < Cols; c++) Console.Write($" {c + 1}");
-    //     Console.WriteLine();
-
-    //     for (int r = 0; r < Rows; r++)
-    //     {
-    //         Console.Write($" {r + 1} ");
-    //         for (int c = 0; c < Cols; c++)
-    //             Console.Write($" {Cells[r, c]}");
-    //         Console.WriteLine();
-    //     }
-    // }
     public override void Display()
-{
-    Console.WriteLine();
+    {
+        Console.WriteLine();
+        string border = BuildBorder();
+        bool isConnectFour = Rows == ConnectFourRows && Cols == ConnectFourCols;
 
-    string border = "+" + new string('-', Cols * 4 - 1) + "+";
-    bool isConnectFour = Rows == 6 && Cols == 7;
+        Console.WriteLine(border);
 
-    Console.WriteLine(border);
+        for (int r = 0; r < Rows; r++)
+        {
+            PrintRow(r);
+            Console.WriteLine($"   row {Rows - r}");
 
-    for (int r = 0; r < Rows; r++)
+            if (!isConnectFour && r < Rows - 1)
+                Console.WriteLine(new string('-', Cols * CellDisplayWidth + 1));
+        }
+
+        Console.WriteLine(border);
+        PrintColumnLabels();
+        Console.WriteLine();
+    }
+
+    private string BuildBorder() => "+" + new string('-', Cols * CellDisplayWidth - 1) + "+";
+
+    private void PrintRow(int row)
     {
         Console.Write("|");
-
         for (int c = 0; c < Cols; c++)
         {
-            char cell = Cells[r, c];
-
+            char cell = Cells[row, c];
             if (cell == '.' || cell == ' ' || cell == '\0')
                 Console.Write("   |");
             else
                 Console.Write($" {cell} |");
         }
-
-        Console.WriteLine($"   row {Rows - r}");
-
-        if (!isConnectFour && r < Rows - 1)
-        {
-            Console.WriteLine(new string('-', Cols * 4 + 1));
-        }
     }
 
-    Console.WriteLine(border);
-
-    Console.Write(" ");
-    for (int c = 1; c <= Cols; c++)
+    private void PrintColumnLabels()
     {
-        Console.Write($" {c}  ");
+        Console.Write(" ");
+        for (int c = 1; c <= Cols; c++)
+            Console.Write($" {c}  ");
+        Console.WriteLine(" columns");
     }
-
-    Console.WriteLine(" columns");
-    Console.WriteLine();
-}
 
     public override Board Clone()
     {
-        var copy = new GridBoard(Rows, Cols, _empty);
+        GridBoard copy = new GridBoard(Rows, Cols, _empty);
         for (int r = 0; r < Rows; r++)
             for (int c = 0; c < Cols; c++)
                 copy.Cells[r, c] = Cells[r, c];
@@ -140,7 +132,7 @@ public class GridBoard : Board
 
     public override string Serialize()
     {
-        var sb = new System.Text.StringBuilder();
+        StringBuilder sb = new StringBuilder();
         for (int r = 0; r < Rows; r++)
             for (int c = 0; c < Cols; c++)
                 sb.Append(Cells[r, c]);

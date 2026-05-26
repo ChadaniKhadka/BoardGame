@@ -4,25 +4,24 @@ namespace BoardGame.Moves;
 
 public class RecordedMove
 {
-    public Move   Move           { get; }
-    public Board  BoardSnapshot  { get; }
-    public int    PlayerIndex    { get; }
+    public Move Move { get; }
+    public Board BoardSnapshot { get; }
+    public int PlayerIndex { get; }
 
     public RecordedMove(Move move, Board boardSnapshot, int playerIndex)
     {
-        Move          = move;
+        Move = move;
         BoardSnapshot = boardSnapshot;
-        PlayerIndex   = playerIndex;
+        PlayerIndex = playerIndex;
     }
 }
 
 public class MoveHistory
 {
-    private readonly Stack<RecordedMove> _past   = new();
+    private readonly Stack<RecordedMove> _past = new();
     private readonly Stack<RecordedMove> _future = new();
 
-    public int PastCount   => _past.Count;
-    public int FutureCount => _future.Count;
+    public int PastCount => _past.Count;
 
     public bool CanUndo(bool hvc) => hvc ? _past.Count >= 2 : _past.Count >= 1;
     public bool CanRedo(bool hvc) => hvc ? _future.Count >= 2 : _future.Count >= 1;
@@ -36,7 +35,7 @@ public class MoveHistory
     public RecordedMove? UndoSingle()
     {
         if (_past.Count == 0) return null;
-        var undone = _past.Pop();
+        RecordedMove undone = _past.Pop();
         _future.Push(undone);
         return undone;
     }
@@ -47,7 +46,7 @@ public class MoveHistory
         if (_past.Count < 2) return false;
 
         computerMove = _past.Pop();
-        humanMove    = _past.Pop();
+        humanMove = _past.Pop();
         _future.Push(computerMove);
         _future.Push(humanMove);
         return true;
@@ -56,7 +55,7 @@ public class MoveHistory
     public RecordedMove? RedoSingle()
     {
         if (_future.Count == 0) return null;
-        var redo = _future.Pop();
+        RecordedMove redo = _future.Pop();
         _past.Push(redo);
         return redo;
     }
@@ -66,7 +65,7 @@ public class MoveHistory
         humanMove = computerMove = null;
         if (_future.Count < 2) return false;
 
-        humanMove    = _future.Pop();
+        humanMove = _future.Pop();
         computerMove = _future.Pop();
         _past.Push(humanMove);
         _past.Push(computerMove);
@@ -81,9 +80,9 @@ public class MoveHistory
         _past.Clear();
         _future.Clear();
 
-        foreach (var move in moves)
+        foreach (Move move in moves)
         {
-            var snapshot = board.Clone();
+            Board snapshot = board.Clone();
             board.ApplyMove(move);
             int player = move.PlayerIndex;
             _past.Push(new RecordedMove(move, snapshot, player));

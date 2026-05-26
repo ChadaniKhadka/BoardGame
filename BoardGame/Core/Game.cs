@@ -6,18 +6,18 @@ namespace BoardGame.Core;
 
 public abstract class Game
 {
-    protected Board Board = null!;
-    protected Player[] Players;
-    protected int CurrentIdx;
-    protected bool GameOver;
-    protected Player? Winner;
-    protected MoveHistory History = new();
+    protected Board Board { get; set; } = null!;
+    protected Player[] Players { get; set; }
+    protected int CurrentIdx { get; set; }
+    protected bool GameOver { get; set; }
+    protected Player? Winner { get; set; }
+    protected MoveHistory History { get; } = new();
     protected bool _resumeFromSave;
 
     public abstract string GameName { get; }
     protected Player Current => Players[CurrentIdx];
 
-    protected Game(Player[] players) { Players = players; }
+    protected Game(Player[] players) => Players = players;
 
     private bool IsHvCMode => Players.Any(p => p is ComputerPlayer);
 
@@ -38,49 +38,9 @@ public abstract class Game
             Board.Display();
 
             if (Current is HumanPlayer)
-            {
-                Console.WriteLine($"\nPlayer {CurrentIdx + 1}'s turn");
-
-                ShowTurnInfo(Current);
-
-                Console.Write($"P{CurrentIdx + 1}> ");
-
-                string input = Console.ReadLine()?.Trim() ?? "";
-
-                switch (input.ToLower())
-                {
-                    case "u":
-                        Undo();
-                        continue;
-
-                    case "r":
-                        Redo();
-                        continue;
-
-                    case "s":
-                        SaveGame();
-                        continue;
-
-                    case "h":
-                        ShowHelp();
-                        continue;
-
-                    case "e":
-                        exitRequested = ExitGame();
-                        continue;
-                }
-
-                Move? move = PromptHumanMove(Current, input);
-                if (move != null)
-                    DoMove(move);
-            }
+                exitRequested = ProcessHumanTurn();
             else
-            {
-                Console.WriteLine($"\nPlayer {CurrentIdx + 1}'s turn");
-                Move? move = Current.GetMove(Board, this);
-                if (move != null)
-                    DoMove(move);
-            }
+                ProcessComputerTurn();
         }
 
         if (GameOver)
@@ -88,6 +48,58 @@ public abstract class Game
             Board.Display();
             AnnounceResult();
         }
+    }
+
+    private bool ProcessHumanTurn()
+    {
+        Console.WriteLine($"\nPlayer {CurrentIdx + 1}'s turn");
+        ShowTurnInfo(Current);
+        Console.Write($"P{CurrentIdx + 1}> ");
+
+        string input = Console.ReadLine()?.Trim() ?? "";
+
+        if (TryHandleHumanCommand(input, out bool exitRequested))
+            return exitRequested;
+
+        Move? move = PromptHumanMove(Current, input);
+        if (move is not null)
+            DoMove(move);
+
+        return false;
+    }
+
+    private bool TryHandleHumanCommand(string input, out bool exitRequested)
+    {
+        exitRequested = false;
+
+        switch (input.ToLower())
+        {
+            case "u":
+                Undo();
+                return true;
+            case "r":
+                Redo();
+                return true;
+            case "s":
+                SaveGame();
+                return true;
+            case "h":
+                ShowHelp();
+                return true;
+            case "e":
+                exitRequested = ExitGame();
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private void ProcessComputerTurn()
+    {
+        Console.WriteLine($"\nPlayer {CurrentIdx + 1}'s turn");
+        Move? move = Current.GetMove(Board, this);
+        if (move is not null)
+            DoMove(move);
     }
 
     protected virtual void DoMove(Move move)
@@ -101,10 +113,7 @@ public abstract class Game
         FinalizeAfterMove(mover);
     }
 
-    private void ApplyMoveWithoutRecording(Move move)
-    {
-        Board.ApplyMove(move);
-    }
+    private void ApplyMoveWithoutRecording(Move move) => Board.ApplyMove(move);
 
     private void FinalizeAfterMove(int playerWhoMoved)
     {
@@ -147,8 +156,8 @@ public abstract class Game
             return;
         }
 
-        var undone = History.UndoSingle();
-        if (undone == null)
+        RecordedMove? undone = History.UndoSingle();
+        if (undone is null)
         {
             Console.WriteLine("Nothing to undo.");
             return;
@@ -169,7 +178,7 @@ public abstract class Game
             return;
         }
 
-        if (!History.UndoRound(out var humanMove, out _))
+        if (!History.UndoRound(out RecordedMove? humanMove, out _))
         {
             Console.WriteLine("Nothing to undo.");
             return;
@@ -198,8 +207,8 @@ public abstract class Game
             return;
         }
 
-        var redo = History.RedoSingle();
-        if (redo == null)
+        RecordedMove? redo = History.RedoSingle();
+        if (redo is null)
         {
             Console.WriteLine("Nothing to redo.");
             return;
@@ -221,7 +230,7 @@ public abstract class Game
             return;
         }
 
-        if (!History.RedoRound(out var humanMove, out var computerMove))
+        if (!History.RedoRound(out RecordedMove? humanMove, out RecordedMove? computerMove))
         {
             Console.WriteLine("Nothing to redo.");
             return;
@@ -232,7 +241,12 @@ public abstract class Game
 
         ApplyMoveWithoutRecording(humanMove!.Move);
         ApplyMoveWithoutRecording(computerMove!.Move);
+        FinalizeAfterHvCRedo(computerMove);
+        Console.WriteLine("Move redone.");
+    }
 
+    private void FinalizeAfterHvCRedo(RecordedMove computerMove)
+    {
         if (CheckWin())
         {
             Winner = Players[computerMove.PlayerIndex];
@@ -246,8 +260,6 @@ public abstract class Game
         {
             CurrentIdx = HumanPlayerIndex;
         }
-
-        Console.WriteLine("Move redone.");
     }
 
     public void SaveGame()
@@ -300,7 +312,7 @@ public abstract class Game
     protected virtual void ShowGameHelp() { }
 
     protected virtual void AnnounceResult()
-        => Console.WriteLine(Winner != null
+        => Console.WriteLine(Winner is not null
             ? $"\n*** {Winner.Name} wins! ***"
             : "\n*** Draw! ***");
 

@@ -2,34 +2,33 @@ using BoardGame.Core;
 
 namespace BoardGame.Games;
 
-// Notakto: both players use 'X', completing 3 in a row loses
 public class NotaktoGame : BaseGame
 {
+    private const int BoardSize = 3;
+    private const int WinLength = 3;
+    private const char Piece = 'X';
+
     public override string GameName => "Notakto";
 
     public NotaktoGame(Player[] players) : base(players) { }
 
-    protected override void SetupBoard() => Board = new GridBoard(3, 3);
+    protected override void SetupBoard() => Board = new GridBoard(BoardSize, BoardSize);
 
-    // In Notakto both players place 'X'
     protected override void DoMove(Move move)
     {
-        ((GridMove)move).Value = 'X';
+        ((GridMove)move).Value = Piece;
         base.DoMove(move);
     }
 
-    // The player who COMPLETES a line loses
     protected override bool CheckWin()
-        => WinChecker.HasLine(Grid, 'X', 3);
+        => WinChecker.HasLine(Grid, Piece, WinLength);
 
-    // When CheckWin is true the CURRENT player loses — so the OTHER player wins
     protected override void AnnounceResult()
     {
-        if (Winner != null)
+        if (Winner is not null)
         {
-            // Winner here is the one who completed the line — they actually lose
-            var loser = Winner;
-            var winner = Players.First(p => p != loser);
+            Player loser = Winner;
+            Player winner = Players.First(p => p != loser);
             Console.WriteLine($"\n*** {winner.Name} wins! ({loser.Name} completed a line) ***");
         }
         else
@@ -41,11 +40,11 @@ public class NotaktoGame : BaseGame
     protected override bool HasMoves() => !Grid.IsFull();
 
     public override bool CheckWinOnBoard(Board b)
-        => WinChecker.HasLine((GridBoard)b, 'X', 3);
+        => WinChecker.HasLine((GridBoard)b, Piece, WinLength);
 
     public override List<Move> GetValidMoves()
     {
-        var moves = new List<Move>();
+        List<Move> moves = new List<Move>();
         for (int r = 0; r < Grid.Rows; r++)
             for (int c = 0; c < Grid.Cols; c++)
                 if (Grid.IsEmpty(r, c))
@@ -54,22 +53,20 @@ public class NotaktoGame : BaseGame
                         PlayerIndex = CurrentIdx,
                         Row = r,
                         Col = c,
-                        Value = 'X'
+                        Value = Piece
                     });
         return moves;
     }
 
-
-    // Validate row and column input. Both players place X.
     public override Move? PromptHumanMove(Player p, string input)
     {
-        var parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        string[] parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
         if (parts.Length == 2
             && int.TryParse(parts[0], out int row)
             && int.TryParse(parts[1], out int col)
-            && row >= 1 && row <= 3
-            && col >= 1 && col <= 3
+            && row >= 1 && row <= BoardSize
+            && col >= 1 && col <= BoardSize
             && Grid.IsEmpty(row - 1, col - 1))
         {
             return new GridMove
@@ -77,7 +74,7 @@ public class NotaktoGame : BaseGame
                 PlayerIndex = p.Index,
                 Row = row - 1,
                 Col = col - 1,
-                Value = 'X'
+                Value = Piece
             };
         }
 

@@ -7,7 +7,6 @@ namespace BoardGame.Factory;
 
 public static class GameFactory
 {
-    //  Create a fresh game 
     public static Game Create(int choice, Player[] players) => choice switch
     {
         1 => new TicTacToeGame(players),
@@ -18,48 +17,39 @@ public static class GameFactory
         _ => throw new ArgumentException("Unknown game selection.")
     };
 
-    //  Load a saved game 
     public static Game Load(string filename)
     {
         ISaveStrategy strategy = SaveStrategyFactory.ForFilename(filename);
-        GameState s = strategy.Load(filename);
+        GameState state = strategy.Load(filename);
 
-        Player[] players = Enumerable.Range(0, s.PlayerNames.Length)
-            .Select(i => s.PlayerTypes[i] == "Computer"
-                ? (Player)new ComputerPlayer(s.PlayerNames[i], s.PlayerSymbols[i], i)
-                :          new HumanPlayer  (s.PlayerNames[i], s.PlayerSymbols[i], i))
+        Player[] players = Enumerable.Range(0, state.PlayerNames.Length)
+            .Select(i => state.PlayerTypes[i] == "Computer"
+                ? (Player)new ComputerPlayer(state.PlayerNames[i], state.PlayerSymbols[i], i)
+                : new HumanPlayer(state.PlayerNames[i], state.PlayerSymbols[i], i))
             .ToArray();
 
-        Game game = s.GameType switch
+        Game game = state.GameType switch
         {
-            "tictactoe"           => new TicTacToeGame(players),
-            "numericaltictactoe"  => new NumericalTicTacToeGame(players),
-            "notakto"             => new NotaktoGame(players),
-            "gomoku"              => new GomokuGame(players),
-            "connectfour"         => new ConnectFourGame(players),
-            _ => throw new InvalidDataException($"Unknown game type: {s.GameType}")
+            "tictactoe" => new TicTacToeGame(players),
+            "numericaltictactoe" => new NumericalTicTacToeGame(players),
+            "notakto" => new NotaktoGame(players),
+            "gomoku" => new GomokuGame(players),
+            "connectfour" => new ConnectFourGame(players),
+            _ => throw new InvalidDataException($"Unknown game type: {state.GameType}")
         };
 
-        game.LoadFromState(s);
+        game.LoadFromState(state);
         return game;
     }
 
-    //  Build players from user input ─
     public static Player[] BuildPlayers(string mode)
     {
-        Player p1 = new HumanPlayer("P1", 'X', 0);
+        Player playerOne = new HumanPlayer("P1", 'X', 0);
 
-        Player p2 = mode == "2"
+        Player playerTwo = mode == "2"
             ? new ComputerPlayer("P2", 'O', 1)
             : new HumanPlayer("P2", 'O', 1);
 
-        return [p1, p2];
+        return [playerOne, playerTwo];
     }
-    //  Helper ─
-    // private static string Prompt(string label, string fallback)
-    // {
-    //     Console.Write($"  {label} (default '{fallback}'): ");
-    //     string v = Console.ReadLine()?.Trim() ?? "";
-    //     return string.IsNullOrWhiteSpace(v) ? fallback : v;
-    // }
 }
