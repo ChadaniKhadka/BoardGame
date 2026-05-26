@@ -1,37 +1,59 @@
 using BoardGame.Core;
 
 namespace BoardGame.Games;
+
+// Standard 3x3 tic-tac-toe: first player to get three in a row wins.
 public class TicTacToeGame : BaseGame
 {
+    private const int BoardSize = 3;
+    private const int WinLength = 3;
+
     public override string GameName => "Tic-Tac-Toe";
 
     public TicTacToeGame(Player[] players) : base(players) { }
 
-    protected override void SetupBoard() => Board = new GridBoard(3, 3);
+    protected override void SetupBoard()
+    {
+        Board = new GridBoard(BoardSize, BoardSize);
+    }
 
     protected override bool CheckWin()
-        => WinChecker.HasLine(Grid, Current.Symbol, 3);
+    {
+        return WinChecker.HasLine(Grid, Current.Symbol, WinLength);
+    }
 
-    protected override bool HasMoves() => !Grid.IsFull();
+    protected override bool HasMoves()
+    {
+        return !Grid.IsFull();
+    }
 
     public override bool CheckWinOnBoard(Board b)
-        => WinChecker.HasLine((GridBoard)b, Current.Symbol, 3);
+    {
+        return WinChecker.HasLine((GridBoard)b, Current.Symbol, WinLength);
+    }
 
     public override List<Move> GetValidMoves()
     {
-        var moves = new List<Move>();
+        List<Move> moves = new List<Move>();
         for (int r = 0; r < Grid.Rows; r++)
+        {
             for (int c = 0; c < Grid.Cols; c++)
+            {
                 if (Grid.IsEmpty(r, c))
+                {
                     moves.Add(new GridMove
                     {
                         PlayerIndex = CurrentIdx,
-                        Row = r, Col = c,
+                        Row = r,
+                        Col = c,
                         Value = Current.Symbol
                     });
+                }
+            }
+        }
         return moves;
     }
 
-    protected override void ShowGameHelp()
-        => Console.WriteLine("  Enter row and column 1-3 (e.g. '2 3')");
+    protected override string GetGameHelp() =>
+        "Enter row and column. Example: 2 2";
 }

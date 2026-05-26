@@ -2,51 +2,79 @@ using BoardGame.Games;
 
 namespace BoardGame.Core;
 
+// Checks whether a symbol forms a line of the required length on a grid board.
 public static class WinChecker
 {
-    // Returns true if 'symbol' has 'target' in a row/col/diagonal on 'board'
+    // Return true if symbol appears in a row, column, or diagonal of length target.
     public static bool HasLine(GridBoard board, char symbol, int target)
     {
-        int R = board.Rows, C = board.Cols;
-        var cells = board.Cells;
+        int rows = board.Rows;
+        int cols = board.Cols;
+        char[,] cells = board.Cells;
 
-        // Rows
-        for (int r = 0; r < R; r++)
+        // Check every row for a run of matching symbols
+        for (int row = 0; row < rows; row++)
         {
             int count = 0;
-            for (int c = 0; c < C; c++)
-                count = cells[r, c] == symbol ? count + 1 : 0;
-            if (count >= target) return true;
+            for (int col = 0; col < cols; col++)
+            {
+                if (cells[row, col] == symbol)
+                    count++;
+                else
+                    count = 0;
+
+                if (count >= target)
+                    return true;
+            }
         }
 
-        // Columns
-        for (int c = 0; c < C; c++)
+        // Check every column for a run of matching symbols
+        for (int col = 0; col < cols; col++)
         {
             int count = 0;
-            for (int r = 0; r < R; r++)
-                count = cells[r, c] == symbol ? count + 1 : 0;
-            if (count >= target) return true;
+            for (int row = 0; row < rows; row++)
+            {
+                if (cells[row, col] == symbol)
+                    count++;
+                else
+                    count = 0;
+
+                if (count >= target)
+                    return true;
+            }
         }
 
-        // Diagonals (↘
-        for (int r = 0; r <= R - target; r++)
-            for (int c = 0; c <= C - target; c++)
+        // Check diagonals that slope down to the right
+        for (int startRow = 0; startRow <= rows - target; startRow++)
+        {
+            for (int startCol = 0; startCol <= cols - target; startCol++)
             {
                 int count = 0;
-                for (int i = 0; i < target; i++)
-                    if (cells[r + i, c + i] == symbol) count++;
-                if (count == target) return true;
+                for (int step = 0; step < target; step++)
+                {
+                    if (cells[startRow + step, startCol + step] == symbol)
+                        count++;
+                }
+                if (count == target)
+                    return true;
             }
+        }
 
-        // Anti-diagonals 
-        for (int r = 0; r <= R - target; r++)
-            for (int c = target - 1; c < C; c++)
+        // Check diagonals that slope down to the left
+        for (int startRow = 0; startRow <= rows - target; startRow++)
+        {
+            for (int startCol = target - 1; startCol < cols; startCol++)
             {
                 int count = 0;
-                for (int i = 0; i < target; i++)
-                    if (cells[r + i, c - i] == symbol) count++;
-                if (count == target) return true;
+                for (int step = 0; step < target; step++)
+                {
+                    if (cells[startRow + step, startCol - step] == symbol)
+                        count++;
+                }
+                if (count == target)
+                    return true;
             }
+        }
 
         return false;
     }

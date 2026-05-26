@@ -5,14 +5,18 @@ namespace BoardGame.SaveLoad;
 
 public interface ISaveStrategy
 {
-    void      Save(GameState state, string filename);
+    void Save(GameState state, string filename);
     GameState Load(string filename);
-    string    GetFileExtension();
+    string GetFileExtension();
 }
 
+// Saves and loads game state as plain text key=value lines.
 public class TextSaveStrategy : ISaveStrategy
 {
-    public string GetFileExtension() => ".txt";
+    public string GetFileExtension()
+    {
+        return ".txt";
+    }
 
     public void Save(GameState state, string filename)
     {
@@ -23,111 +27,165 @@ public class TextSaveStrategy : ISaveStrategy
     public GameState Load(string filename)
     {
         string path = WithExtension(filename);
-        return Deserialise(File.ReadAllText(path));
+        string data = File.ReadAllText(path);
+        return Deserialise(data);
     }
 
-    private string Serialise(GameState s)
+    // Write each piece of game state as one line: key=value
+    private string Serialise(GameState state)
     {
-        var lines = new List<string>
-        {
-            $"GameType={s.GameType}",
-            $"BoardData={s.BoardData}",
-            $"CurrentIdx={s.CurrentPlayerIndex}",
-            $"Count={s.PlayerNames.Length}",
-        };
+        List<string> lines = new List<string>();
 
-        for (int i = 0; i < s.PlayerNames.Length; i++)
+        lines.Add("GameType=" + state.GameType);
+        lines.Add("BoardData=" + state.BoardData);
+        lines.Add("CurrentIdx=" + state.CurrentPlayerIndex);
+        lines.Add("Count=" + state.PlayerNames.Length);
+
+        for (int i = 0; i < state.PlayerNames.Length; i++)
         {
-            lines.Add($"N{i}={s.PlayerNames[i]}");
-            lines.Add($"S{i}={s.PlayerSymbols[i]}");
-            lines.Add($"T{i}={s.PlayerTypes[i]}");
+            lines.Add("N" + i + "=" + state.PlayerNames[i]);
+            lines.Add("S" + i + "=" + state.PlayerSymbols[i]);
+            lines.Add("T" + i + "=" + state.PlayerTypes[i]);
         }
 
-        lines.Add($"Moves={s.MoveHistory.Count}");
-        for (int i = 0; i < s.MoveHistory.Count; i++)
-            lines.Add($"M{i}={s.MoveHistory[i]}");
+        lines.Add("Moves=" + state.MoveHistory.Count);
+        for (int i = 0; i < state.MoveHistory.Count; i++)
+            lines.Add("M" + i + "=" + state.MoveHistory[i]);
 
-        foreach (var kv in s.Extra)
-            lines.Add($"X_{kv.Key}={kv.Value}");
+        foreach (KeyValuePair<string, string> entry in state.Extra)
+            lines.Add("X_" + entry.Key + "=" + entry.Value);
 
         return string.Join(Environment.NewLine, lines);
     }
 
+    // Read key=value lines back into a GameState object
     private GameState Deserialise(string data)
     {
-        var d = data.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
-                    .Where(l => l.Contains('='))
-                    .ToDictionary(
-                        l => l[..l.IndexOf('=')],
-                        l => l[(l.IndexOf('=') + 1)..]);
+        Dictionary<string, string> fields = new Dictionary<string, string>();
+        string[] lines = data.Split(
+            new[] { Environment.NewLine },
+            StringSplitOptions.RemoveEmptyEntries);
 
-        int n = int.Parse(d.GetValueOrDefault("Count", "2"));
-
-        var gs = new GameState
+        foreach (string line in lines)
         {
-            GameType           = d.GetValueOrDefault("GameType", ""),
-            BoardData          = d.GetValueOrDefault("BoardData", ""),
-            CurrentPlayerIndex = int.Parse(d.GetValueOrDefault("CurrentIdx", "0")),
-            PlayerNames        = Enumerable.Range(0, n).Select(i => d[$"N{i}"]).ToArray(),
-            PlayerSymbols      = Enumerable.Range(0, n).Select(i => d[$"S{i}"][0]).ToArray(),
-            PlayerTypes        = Enumerable.Range(0, n).Select(i => d[$"T{i}"]).ToArray(),
-        };
+            if (!line.Contains('='))
+                continue;
 
-        int mc = int.Parse(d.GetValueOrDefault("Moves", "0"));
-        for (int i = 0; i < mc; i++) gs.MoveHistory.Add(d[$"M{i}"]);
+            int equalsIndex = line.IndexOf('=');
+            string key = line.Substring(0, equalsIndex);
+            string value = line.Substring(equalsIndex + 1);
+            fields[key] = value;
+        }
 
-        foreach (var kv in d.Where(k => k.Key.StartsWith("X_")))
-            gs.Extra[kv.Key[2..]] = kv.Value;
+        int playerCount = 2;
+        if (fields.ContainsKey("Count"))
+            playerCount = int.Parse(fields["Count"]);
 
-        return gs;
+        GameState gameState = new GameState();
+        gameState.GameType = fields.ContainsKey("GameType") ? fields["GameType"] : "";
+        gameState.BoardData = fields.ContainsKey("BoardData") ? fields["BoardData"] : "";
+        gameState.CurrentPlayerIndex = fields.ContainsKey("CurrentIdx")
+            ? int.Parse(fields["CurrentIdx"])
+            : 0;
+
+        gameState.PlayerNames = new string[playerCount];
+        gameState.PlayerSymbols = new char[playerCount];
+        gameState.PlayerTypes = new string[playerCount];
+
+        for (int i = 0; i < playerCount; i++)
+        {
+            gameState.PlayerNames[i] = fields["N" + i];
+            gameState.PlayerSymbols[i] = fields["S" + i][0];
+            gameState.PlayerTypes[i] = fields["T" + i];
+        }
+
+        int moveCount = 0;
+        if (fields.ContainsKey("Moves"))
+            moveCount = int.Parse(fields["Moves"]);
+
+        for (int i = 0; i < moveCount; i++)
+            gameState.MoveHistory.Add(fields["M" + i]);
+
+        foreach (KeyValuePair<string, string> entry in fields)
+        {
+            if (entry.Key.StartsWith("X_"))
+            {
+                string extraKey = entry.Key.Substring(2);
+                gameState.Extra[extraKey] = entry.Value;
+            }
+        }
+
+        return gameState;
     }
 
-    private string WithExtension(string filename) =>
-        filename.EndsWith(GetFileExtension(), StringComparison.OrdinalIgnoreCase)
-            ? filename
-            : filename + GetFileExtension();
+    // Add .txt extension if the filename does not already have it
+    private string WithExtension(string filename)
+    {
+        if (filename.EndsWith(GetFileExtension(), StringComparison.OrdinalIgnoreCase))
+            return filename;
+        return filename + GetFileExtension();
+    }
 }
 
+// Saves and loads game state as formatted JSON.
 public class JsonSaveStrategy : ISaveStrategy
 {
     private static readonly JsonSerializerOptions Opts = new() { WriteIndented = true };
 
-    public string GetFileExtension() => ".json";
+    public string GetFileExtension()
+    {
+        return ".json";
+    }
 
     public void Save(GameState state, string filename)
     {
         string path = WithExtension(filename);
-        File.WriteAllText(path, SerialiseToJson(state));
+        string json = SerialiseToJson(state);
+        File.WriteAllText(path, json);
     }
 
     public GameState Load(string filename)
     {
         string path = WithExtension(filename);
-        return DeserialiseFromJson(File.ReadAllText(path));
+        string json = File.ReadAllText(path);
+        return DeserialiseFromJson(json);
     }
 
-    private string SerialiseToJson(GameState state) =>
-        JsonSerializer.Serialize(state, Opts);
+    private string SerialiseToJson(GameState state)
+    {
+        return JsonSerializer.Serialize(state, Opts);
+    }
 
-    private GameState DeserialiseFromJson(string json) =>
-        JsonSerializer.Deserialize<GameState>(json)
-        ?? throw new InvalidDataException("Bad save file.");
+    private GameState DeserialiseFromJson(string json)
+    {
+        GameState? state = JsonSerializer.Deserialize<GameState>(json);
+        if (state is null)
+            throw new InvalidDataException("Bad save file.");
+        return state;
+    }
 
-    private string WithExtension(string filename) =>
-        filename.EndsWith(GetFileExtension(), StringComparison.OrdinalIgnoreCase)
-            ? filename
-            : filename + GetFileExtension();
+    private string WithExtension(string filename)
+    {
+        if (filename.EndsWith(GetFileExtension(), StringComparison.OrdinalIgnoreCase))
+            return filename;
+        return filename + GetFileExtension();
+    }
 }
 
+// Picks the correct save strategy based on file extension or user choice.
 public static class SaveStrategyFactory
 {
-    public static ISaveStrategy ForFilename(string filename) =>
-        filename.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
-            ? new JsonSaveStrategy()
-            : new TextSaveStrategy();
+    public static ISaveStrategy ForFilename(string filename)
+    {
+        if (filename.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+            return new JsonSaveStrategy();
+        return new TextSaveStrategy();
+    }
 
-    public static ISaveStrategy ForFormat(string format) =>
-        format.ToLower() == "json"
-            ? (ISaveStrategy)new JsonSaveStrategy()
-            : new TextSaveStrategy();
+    public static ISaveStrategy ForFormat(string format)
+    {
+        if (format.ToLower() == "json")
+            return new JsonSaveStrategy();
+        return new TextSaveStrategy();
+    }
 }
