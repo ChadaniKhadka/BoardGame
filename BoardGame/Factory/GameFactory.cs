@@ -7,59 +7,120 @@ namespace BoardGame.Factory;
 
 public static class GameFactory
 {
-    //  Create a fresh game 
-    public static Game Create(int choice, Player[] players) => choice switch
+    // CREATE A NEW GAME
+    public static Game Create(int gameChoice, Player[] players)
     {
-        1 => new TicTacToeGame(players),
-        2 => new NumericalTicTacToeGame(players),
-        3 => new NotaktoGame(players),
-        4 => new GomokuGame(players),
-        5 => new ConnectFourGame(players),
-        _ => throw new ArgumentException("Unknown game selection.")
-    };
-
-    //  Load a saved game 
-    public static Game Load(string filename)
-    {
-        ISaveStrategy strategy = SaveStrategyFactory.ForFilename(filename);
-        GameState s = strategy.Load(filename);
-
-        Player[] players = Enumerable.Range(0, s.PlayerNames.Length)
-            .Select(i => s.PlayerTypes[i] == "Computer"
-                ? (Player)new ComputerPlayer(s.PlayerNames[i], s.PlayerSymbols[i], i)
-                :          new HumanPlayer  (s.PlayerNames[i], s.PlayerSymbols[i], i))
-            .ToArray();
-
-        Game game = s.GameType switch
+        switch (gameChoice)
         {
-            "tictactoe"           => new TicTacToeGame(players),
-            "numericaltictactoe"  => new NumericalTicTacToeGame(players),
-            "notakto"             => new NotaktoGame(players),
-            "gomoku"              => new GomokuGame(players),
-            "connectfour"         => new ConnectFourGame(players),
-            _ => throw new InvalidDataException($"Unknown game type: {s.GameType}")
-        };
+            case 1:
+                return new TicTacToeGame(players);
 
-        game.LoadFromState(s);
+            case 2:
+                return new NumericalTicTacToeGame(players);
+
+            case 3:
+                return new NotaktoGame(players);
+
+            case 4:
+                return new GomokuGame(players);
+
+            case 5:
+                return new ConnectFourGame(players);
+
+            default:
+                throw new ArgumentException("Invalid game choice.");
+        }
+    }
+
+    // LOAD A SAVED GAME
+    public static Game Load(string fileName)
+    {
+        // Choose save strategy based on file extension
+        ISaveStrategy strategy =
+            SaveStrategyFactory.ForFilename(fileName);
+
+        // Load saved data
+        GameState state = strategy.Load(fileName);
+
+        // Create players from saved data
+        Player[] players = new Player[state.PlayerNames.Length];
+
+        for (int i = 0; i < state.PlayerNames.Length; i++)
+        {
+            // Create computer player
+            if (state.PlayerTypes[i] == "Computer")
+            {
+                players[i] = new ComputerPlayer(
+                    state.PlayerNames[i],
+                    state.PlayerSymbols[i],
+                    i
+                );
+            }
+            // Create human player
+            else
+            {
+                players[i] = new HumanPlayer(
+                    state.PlayerNames[i],
+                    state.PlayerSymbols[i],
+                    i
+                );
+            }
+        }
+
+        Game game;
+
+        // Create correct game type
+        switch (state.GameType)
+        {
+            case "tictactoe":
+                game = new TicTacToeGame(players);
+                break;
+
+            case "numericaltictactoe":
+                game = new NumericalTicTacToeGame(players);
+                break;
+
+            case "notakto":
+                game = new NotaktoGame(players);
+                break;
+
+            case "gomoku":
+                game = new GomokuGame(players);
+                break;
+
+            case "connectfour":
+                game = new ConnectFourGame(players);
+                break;
+
+            default:
+                throw new InvalidDataException("Unknown game type.");
+        }
+
+        // Restore saved game data
+        game.LoadFromState(state);
+
         return game;
     }
 
-    //  Build players from user input ─
+
+    // CREATE PLAYERS
     public static Player[] BuildPlayers(string mode)
     {
-        Player p1 = new HumanPlayer("P1", 'X', 0);
+        // Player 1 is always human
+        Player player1 = new HumanPlayer("P1", 'X', 0);
 
-        Player p2 = mode == "2"
-            ? new ComputerPlayer("P2", 'O', 1)
-            : new HumanPlayer("P2", 'O', 1);
+        Player player2;
 
-        return [p1, p2];
+        // If mode = 2, play against computer
+        if (mode == "2")
+        {
+            player2 = new ComputerPlayer("P2", 'O', 1);
+        }
+        else
+        {
+            player2 = new HumanPlayer("P2", 'O', 1);
+        }
+
+        return new Player[] { player1, player2 };
     }
-    //  Helper ─
-    // private static string Prompt(string label, string fallback)
-    // {
-    //     Console.Write($"  {label} (default '{fallback}'): ");
-    //     string v = Console.ReadLine()?.Trim() ?? "";
-    //     return string.IsNullOrWhiteSpace(v) ? fallback : v;
-    // }
 }

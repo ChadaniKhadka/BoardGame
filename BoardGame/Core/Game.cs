@@ -252,10 +252,32 @@ public abstract class Game
 
     public void SaveGame()
     {
+        // Step 1 — Ask for a filename and keep asking until they give one
+    string filename;
+    while (true)
+    {
         Console.Write("Filename (no extension): ");
-        string filename = Console.ReadLine()?.Trim() ?? "save";
+        filename = Console.ReadLine()?.Trim() ?? "";
+
+        if (!string.IsNullOrWhiteSpace(filename))
+            break;
+
+        Console.WriteLine("  Filename cannot be blank. Please try again.");
+    }
+
+    // Step 2 — Ask for format and keep asking until they pick T or J
+    string format;
+    while (true)
+    {
         Console.Write("Format [T]xt / [J]son: ");
-        string format = Console.ReadLine()?.Trim() ?? "t";
+        format = Console.ReadLine()?.Trim().ToLower() ?? "";
+
+        if (format == "t" || format == "j" || format == "txt" || format == "json")
+            break;
+
+        Console.WriteLine("  Please enter T for text or J for JSON.");
+    }
+
 
         ISaveStrategy strategy = SaveStrategyFactory.ForFormat(format);
         strategy.Save(CreateGameState(), filename);
