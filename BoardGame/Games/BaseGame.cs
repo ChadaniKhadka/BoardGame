@@ -67,31 +67,31 @@ public abstract class BaseGame : Game
 
         if (parts.Length != 2)
         {
-            Console.WriteLine("  Invalid or occupied cell — try again.");
+            Console.WriteLine("  Invalid or occupied cell, try again.");
             return null;
         }
 
         if (!int.TryParse(parts[0], out int row))
         {
-            Console.WriteLine("  Invalid or occupied cell — try again.");
+            Console.WriteLine("  Invalid or occupied cell, try again.");
             return null;
         }
 
         if (!int.TryParse(parts[1], out int col))
         {
-            Console.WriteLine("  Invalid or occupied cell — try again.");
+            Console.WriteLine("  Invalid or occupied cell, try again.");
             return null;
         }
 
         if (row < 1 || row > Grid.Rows || col < 1 || col > Grid.Cols)
         {
-            Console.WriteLine("  Invalid or occupied cell — try again.");
+            Console.WriteLine("  Invalid or occupied cell, try again.");
             return null;
         }
 
         if (!Grid.IsEmpty(row - 1, col - 1))
         {
-            Console.WriteLine("  Invalid or occupied cell — try again.");
+            Console.WriteLine("  Invalid or occupied cell, try again.");
             return null;
         }
 
