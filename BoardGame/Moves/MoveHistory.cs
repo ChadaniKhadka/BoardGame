@@ -2,7 +2,7 @@ using BoardGame.Core;
 
 namespace BoardGame.Moves;
 
-// Stores one move together with a board snapshot taken before the move was applied.
+// one move plus the board before it was played
 public class RecordedMove
 {
     public Move Move { get; }
@@ -17,8 +17,8 @@ public class RecordedMove
     }
 }
 
-// Manages undo and redo history using two stacks.
-// Past moves can be undone; undone moves can be redone.
+// keeps track of moves so player can undo and redo
+// undo goes back redo brings moves forward again
 public class MoveHistory
 {
     private readonly Stack<RecordedMove> _past = new();
@@ -40,7 +40,7 @@ public class MoveHistory
         return _future.Count >= 1;
     }
 
-    // Save a move and clear the redo stack
+    // save a move and forget any redo history
     public void RecordMove(Move move, Board boardBefore, int playerIndex)
     {
         _past.Push(new RecordedMove(move, boardBefore, playerIndex));
@@ -57,7 +57,7 @@ public class MoveHistory
         return undone;
     }
 
-    // Undo the last two moves (human then computer) for human vs computer mode
+    // take back human and computer moves in one go
     public bool UndoRound(out RecordedMove? humanMove, out RecordedMove? computerMove)
     {
         humanMove = null;
@@ -83,7 +83,7 @@ public class MoveHistory
         return redo;
     }
 
-    // Redo the last two undone moves for human vs computer mode
+    // put back human and computer moves in one go
     public bool RedoRound(out RecordedMove? humanMove, out RecordedMove? computerMove)
     {
         humanMove = null;
@@ -99,7 +99,7 @@ public class MoveHistory
         return true;
     }
 
-    // Return all recorded moves in the order they were played
+    // list all moves in the order they were played
     public List<Move> GetHistory()
     {
         List<RecordedMove> ordered = new List<RecordedMove>(_past);
@@ -112,7 +112,7 @@ public class MoveHistory
         return moves;
     }
 
-    // Rebuild the history stack from a list of saved moves
+    // rebuild move history after loading a saved game
     public void RebuildFromMoves(IReadOnlyList<Move> moves, Board board)
     {
         _past.Clear();

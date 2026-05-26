@@ -3,7 +3,7 @@ using BoardGame.Core;
 
 namespace BoardGame.Games;
 
-// Represents one move on a row/column grid.
+// a move on a row and column
 public class GridMove : Move
 {
     public int Row { get; set; }
@@ -28,7 +28,7 @@ public class GridMove : Move
     }
 }
 
-// A rows-by-columns grid board that stores one character per cell.
+// grid of rows and columns with one symbol per cell
 public class GridBoard : Board
 {
     private const int ConnectFourRows = 6;

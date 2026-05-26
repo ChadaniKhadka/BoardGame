@@ -3,7 +3,7 @@ using BoardGame.Players;
 
 namespace BoardGame.Games;
 
-// Shared save/load and move-prompt logic for games played on a grid board.
+// shared save load and reading row col moves
 public abstract class BaseGame : Game
 {
     protected GridBoard Grid => (GridBoard)Board;
