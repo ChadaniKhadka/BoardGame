@@ -2,17 +2,17 @@ using BoardGame.Games;
 
 namespace BoardGame.Core;
 
-// Checks whether a symbol forms a line of the required length on a grid board.
+// check if a symbol has enough in a row
 public static class WinChecker
 {
-    // Return true if symbol appears in a row, column, or diagonal of length target.
+    // see if symbol has a winning line
     public static bool HasLine(GridBoard board, char symbol, int target)
     {
         int rows = board.Rows;
         int cols = board.Cols;
         char[,] cells = board.Cells;
 
-        // Check every row for a run of matching symbols
+        // look for matching symbols in each row
         for (int row = 0; row < rows; row++)
         {
             int count = 0;
@@ -28,7 +28,7 @@ public static class WinChecker
             }
         }
 
-        // Check every column for a run of matching symbols
+        // look for matching symbols in each column
         for (int col = 0; col < cols; col++)
         {
             int count = 0;
@@ -44,7 +44,7 @@ public static class WinChecker
             }
         }
 
-        // Check diagonals that slope down to the right
+        // check diagonal lines going down right
         for (int startRow = 0; startRow <= rows - target; startRow++)
         {
             for (int startCol = 0; startCol <= cols - target; startCol++)
@@ -60,7 +60,7 @@ public static class WinChecker
             }
         }
 
-        // Check diagonals that slope down to the left
+        // check diagonal lines going down left
         for (int startRow = 0; startRow <= rows - target; startRow++)
         {
             for (int startCol = target - 1; startCol < cols; startCol++)

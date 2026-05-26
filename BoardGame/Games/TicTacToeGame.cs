@@ -2,7 +2,7 @@ using BoardGame.Core;
 
 namespace BoardGame.Games;
 
-// Standard 3x3 tic-tac-toe: first player to get three in a row wins.
+// 3x3 board, three in a row wins
 public class TicTacToeGame : BaseGame
 {
     private const int BoardSize = 3;

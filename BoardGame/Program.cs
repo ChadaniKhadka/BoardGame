@@ -3,7 +3,7 @@ using BoardGame.Factory;
 
 namespace BoardGame;
 
-// Entry point for the board game framework console application.
+// starts the program and shows the main menu
 public class Program
 {
     public static void Main(string[] args)

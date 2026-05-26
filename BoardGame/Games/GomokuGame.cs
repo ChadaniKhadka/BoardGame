@@ -2,7 +2,7 @@ using BoardGame.Core;
 
 namespace BoardGame.Games;
 
-// Gomoku on a 15x15 board: first player to get five in a row wins.
+// 15x15 board, five in a row wins
 public class GomokuGame : BaseGame
 {
     private const int BoardSize = 15;

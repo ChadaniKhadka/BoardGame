@@ -2,7 +2,7 @@ using BoardGame.Core;
 
 namespace BoardGame.Players;
 
-// A human player — moves come from console input handled by the game class.
+// human types moves in the console
 public class HumanPlayer : Player
 {
     public HumanPlayer(string name, char symbol, int index)
@@ -14,7 +14,7 @@ public class HumanPlayer : Player
     }
 }
 
-// A computer player — picks a winning move if possible, otherwise chooses at random.
+// computer tries to win or picks at random
 public class ComputerPlayer : Player
 {
     private readonly Random _rng = new();

@@ -5,7 +5,7 @@ using BoardGame.SaveLoad;
 
 namespace BoardGame.Factory;
 
-// Creates new games and loads saved games from file.
+// make a new game or load one from file
 public static class GameFactory
 {
     public static Game Create(int choice, Player[] players)

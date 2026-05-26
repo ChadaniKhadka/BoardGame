@@ -5,7 +5,7 @@ using BoardGame.UI;
 
 namespace BoardGame.Core;
 
-// Base class for all board games. Runs the main play loop and handles undo/redo/save.
+// main game loop with undo redo and save
 public abstract class Game
 {
     protected Board Board { get; set; } = null!;
@@ -44,7 +44,7 @@ public abstract class Game
         return 0;
     }
 
-    // Run the main game loop until the game ends or the player exits
+    // keep playing until someone wins or player quits
     public void Play()
     {
         if (!_resumeFromSave)
@@ -71,7 +71,7 @@ public abstract class Game
         }
     }
 
-    // Read and process one human player's turn
+    // read the human player's move or command
     private bool ProcessHumanTurn()
     {
         Console.WriteLine($"\nPlayer {CurrentIdx + 1}'s turn");
@@ -90,7 +90,7 @@ public abstract class Game
         return false;
     }
 
-    // Handle undo, redo, save, help, and exit commands
+    // deal with undo redo save help and exit keys
     private bool TryHandleHumanCommand(string input, out bool exitRequested)
     {
         exitRequested = false;
@@ -118,7 +118,7 @@ public abstract class Game
         }
     }
 
-    // Let the computer player choose and apply a move
+    // computer picks a move and plays it
     private void ProcessComputerTurn()
     {
         Console.WriteLine($"\nPlayer {CurrentIdx + 1}'s turn");
@@ -143,7 +143,7 @@ public abstract class Game
         FinalizeAfterMove(mover);
     }
 
-    // Update game state after a move: check win, draw, or switch player
+    // see if someone won drew or switch turn
     private void FinalizeAfterMove(int playerWhoMoved)
     {
         if (CheckWin())
@@ -163,7 +163,7 @@ public abstract class Game
 
     protected virtual void OnBoardRestored() { }
 
-    // Restore the board from a saved snapshot
+    // put the board back how it was before
     protected void RestoreBoard(Board snapshot)
     {
         Board.Deserialize(snapshot.Serialize());
@@ -178,7 +178,7 @@ public abstract class Game
             UndoHvH();
     }
 
-    // Undo the last single move (human vs human mode)
+    // take back one move in two player mode
     private void UndoHvH()
     {
         if (!History.CanUndo(hvc: false))
@@ -201,7 +201,7 @@ public abstract class Game
         Console.WriteLine("Move undone.");
     }
 
-    // Undo the last human and computer move pair (human vs computer mode)
+    // take back human and computer moves together
     private void UndoHvC()
     {
         if (!History.CanUndo(hvc: true))
@@ -231,7 +231,7 @@ public abstract class Game
             RedoHvH();
     }
 
-    // Redo the last undone move (human vs human mode)
+    // replay one undone move in two player mode
     private void RedoHvH()
     {
         if (!History.CanRedo(hvc: false))
@@ -255,7 +255,7 @@ public abstract class Game
         Console.WriteLine("Move redone.");
     }
 
-    // Redo the last undone human and computer move pair
+    // replay last undone human and computer moves
     private void RedoHvC()
     {
         if (!History.CanRedo(hvc: true))

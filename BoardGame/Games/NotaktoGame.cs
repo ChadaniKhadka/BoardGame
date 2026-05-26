@@ -2,7 +2,7 @@ using BoardGame.Core;
 
 namespace BoardGame.Games;
 
-// Notakto: both players place X; the player who completes a line of three loses.
+// both place X, whoever finishes a line loses
 public class NotaktoGame : BaseGame
 {
     private const int BoardSize = 3;

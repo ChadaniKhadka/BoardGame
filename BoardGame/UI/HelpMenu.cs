@@ -2,7 +2,7 @@ namespace BoardGame.UI;
 
 public class HelpMenu
 {
-    // General commands shown during any game
+    // commands that work in every game
     public static void ShowCommands()
     {
         Console.WriteLine("\n--- Commands ---");
@@ -14,7 +14,7 @@ public class HelpMenu
         Console.WriteLine("----------------");
     }
 
-    // Game-specific help shown below commands
+    // how to play this game
     public static void ShowGameHelp(string gameHelp)
     {
         if (!string.IsNullOrWhiteSpace(gameHelp))
@@ -25,7 +25,7 @@ public class HelpMenu
         }
     }
 
-    // Combined: show both at once
+    // show commands and game help together
     public static void Show(string gameHelp)
     {
         ShowCommands();

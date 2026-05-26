@@ -2,7 +2,7 @@ using BoardGame.Core;
 
 namespace BoardGame.Games;
 
-// Connect Four on a 6x7 board: pieces drop to the bottom of a column.
+// 6x7 board, drop pieces in a column
 public class ConnectFourGame : BaseGame
 {
     private const int BoardRows = 6;
@@ -19,7 +19,7 @@ public class ConnectFourGame : BaseGame
         Board = new GridBoard(BoardRows, BoardCols);
     }
 
-    // Find the lowest empty row in the given column
+    // find where a piece lands in this column
     private int DropRow(int col)
     {
         for (int r = Grid.Rows - 1; r >= 0; r--)

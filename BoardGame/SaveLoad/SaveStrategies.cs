@@ -10,7 +10,7 @@ public interface ISaveStrategy
     string GetFileExtension();
 }
 
-// Saves and loads game state as plain text key=value lines.
+// save and load as simple text lines
 public class TextSaveStrategy : ISaveStrategy
 {
     public string GetFileExtension()
@@ -31,7 +31,7 @@ public class TextSaveStrategy : ISaveStrategy
         return Deserialise(data);
     }
 
-    // Write each piece of game state as one line: key=value
+    // write game data as key=value lines
     private string Serialise(GameState state)
     {
         List<string> lines = new List<string>();
@@ -58,7 +58,7 @@ public class TextSaveStrategy : ISaveStrategy
         return string.Join(Environment.NewLine, lines);
     }
 
-    // Read key=value lines back into a GameState object
+    // read text lines back into game data
     private GameState Deserialise(string data)
     {
         Dictionary<string, string> fields = new Dictionary<string, string>();
@@ -118,7 +118,7 @@ public class TextSaveStrategy : ISaveStrategy
         return gameState;
     }
 
-    // Add .txt extension if the filename does not already have it
+    // add txt to the filename if needed
     private string WithExtension(string filename)
     {
         if (filename.EndsWith(GetFileExtension(), StringComparison.OrdinalIgnoreCase))
@@ -127,7 +127,7 @@ public class TextSaveStrategy : ISaveStrategy
     }
 }
 
-// Saves and loads game state as formatted JSON.
+// save and load as json file
 public class JsonSaveStrategy : ISaveStrategy
 {
     private static readonly JsonSerializerOptions Opts = new() { WriteIndented = true };
@@ -172,7 +172,7 @@ public class JsonSaveStrategy : ISaveStrategy
     }
 }
 
-// Picks the correct save strategy based on file extension or user choice.
+// pick text or json save style
 public static class SaveStrategyFactory
 {
     public static ISaveStrategy ForFilename(string filename)

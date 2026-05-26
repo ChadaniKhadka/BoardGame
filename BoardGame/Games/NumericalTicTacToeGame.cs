@@ -2,7 +2,7 @@ using BoardGame.Core;
 
 namespace BoardGame.Games;
 
-// Numerical tic-tac-toe: odd/even numbers on a 3x3 grid, first line summing to 15 wins.
+// 3x3 grid with numbers, first line to 15 wins
 public class NumericalTicTacToeGame : BaseGame
 {
     private const int BoardSize = 3;
@@ -33,7 +33,7 @@ public class NumericalTicTacToeGame : BaseGame
         RebuildUsed();
     }
 
-    // Rebuild the set of numbers already placed on the board
+    // remember which numbers are already used
     private void RebuildUsed()
     {
         _used.Clear();
@@ -53,7 +53,7 @@ public class NumericalTicTacToeGame : BaseGame
         return playerIdx == 0;
     }
 
-    // Return the numbers this player can still place
+    // list numbers this player can still play
     private List<int> AvailableNumbers(int playerIdx)
     {
         int[] pool;
@@ -81,7 +81,7 @@ public class NumericalTicTacToeGame : BaseGame
         return LineOf15Exists((GridBoard)b);
     }
 
-    // Return true if any row, column, or diagonal sums to 15 with no empty cells
+    // check if any line adds up to 15
     private static bool LineOf15Exists(GridBoard grid)
     {
         int[,] values = new int[BoardSize, BoardSize];
