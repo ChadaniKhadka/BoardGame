@@ -2,6 +2,7 @@ using BoardGame.Core;
 
 namespace BoardGame.Games;
 
+// Gomoku on a 15x15 board: first player to get five in a row wins.
 public class GomokuGame : BaseGame
 {
     private const int BoardSize = 15;
@@ -11,22 +12,35 @@ public class GomokuGame : BaseGame
 
     public GomokuGame(Player[] players) : base(players) { }
 
-    protected override void SetupBoard() => Board = new GridBoard(BoardSize, BoardSize);
+    protected override void SetupBoard()
+    {
+        Board = new GridBoard(BoardSize, BoardSize);
+    }
 
     protected override bool CheckWin()
-        => WinChecker.HasLine(Grid, Current.Symbol, WinLength);
+    {
+        return WinChecker.HasLine(Grid, Current.Symbol, WinLength);
+    }
 
-    protected override bool HasMoves() => !Grid.IsFull();
+    protected override bool HasMoves()
+    {
+        return !Grid.IsFull();
+    }
 
     public override bool CheckWinOnBoard(Board b)
-        => WinChecker.HasLine((GridBoard)b, Current.Symbol, WinLength);
+    {
+        return WinChecker.HasLine((GridBoard)b, Current.Symbol, WinLength);
+    }
 
     public override List<Move> GetValidMoves()
     {
         List<Move> moves = new List<Move>();
         for (int r = 0; r < Grid.Rows; r++)
+        {
             for (int c = 0; c < Grid.Cols; c++)
+            {
                 if (Grid.IsEmpty(r, c))
+                {
                     moves.Add(new GridMove
                     {
                         PlayerIndex = CurrentIdx,
@@ -34,9 +48,12 @@ public class GomokuGame : BaseGame
                         Col = c,
                         Value = Current.Symbol
                     });
+                }
+            }
+        }
         return moves;
     }
 
-    protected override void ShowGameHelp()
-        => Console.WriteLine("  Enter row and column 1-15 (e.g. '8 8')");
+    protected override string GetGameHelp() =>
+        "Enter row and column. Example: 8 8";
 }

@@ -2,6 +2,7 @@ using BoardGame.Core;
 
 namespace BoardGame.Games;
 
+// Notakto: both players place X; the player who completes a line of three loses.
 public class NotaktoGame : BaseGame
 {
     private const int BoardSize = 3;
@@ -12,42 +13,43 @@ public class NotaktoGame : BaseGame
 
     public NotaktoGame(Player[] players) : base(players) { }
 
-    protected override void SetupBoard() => Board = new GridBoard(BoardSize, BoardSize);
+    protected override void SetupBoard()
+    {
+        Board = new GridBoard(BoardSize, BoardSize);
+    }
 
     protected override void DoMove(Move move)
     {
         ((GridMove)move).Value = Piece;
         base.DoMove(move);
+        if (GameOver && Winner is not null)
+            Winner = Players[1 - CurrentIdx];
     }
 
     protected override bool CheckWin()
-        => WinChecker.HasLine(Grid, Piece, WinLength);
-
-    protected override void AnnounceResult()
     {
-        if (Winner is not null)
-        {
-            Player loser = Winner;
-            Player winner = Players.First(p => p != loser);
-            Console.WriteLine($"\n*** {winner.Name} wins! ({loser.Name} completed a line) ***");
-        }
-        else
-        {
-            Console.WriteLine("\n*** Draw! ***");
-        }
+        return WinChecker.HasLine(Grid, Piece, WinLength);
     }
 
-    protected override bool HasMoves() => !Grid.IsFull();
+    protected override bool HasMoves()
+    {
+        return !Grid.IsFull();
+    }
 
     public override bool CheckWinOnBoard(Board b)
-        => WinChecker.HasLine((GridBoard)b, Piece, WinLength);
+    {
+        return WinChecker.HasLine((GridBoard)b, Piece, WinLength);
+    }
 
     public override List<Move> GetValidMoves()
     {
         List<Move> moves = new List<Move>();
         for (int r = 0; r < Grid.Rows; r++)
+        {
             for (int c = 0; c < Grid.Cols; c++)
+            {
                 if (Grid.IsEmpty(r, c))
+                {
                     moves.Add(new GridMove
                     {
                         PlayerIndex = CurrentIdx,
@@ -55,6 +57,9 @@ public class NotaktoGame : BaseGame
                         Col = c,
                         Value = Piece
                     });
+                }
+            }
+        }
         return moves;
     }
 
@@ -62,24 +67,43 @@ public class NotaktoGame : BaseGame
     {
         string[] parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
-        if (parts.Length == 2
-            && int.TryParse(parts[0], out int row)
-            && int.TryParse(parts[1], out int col)
-            && row >= 1 && row <= BoardSize
-            && col >= 1 && col <= BoardSize
-            && Grid.IsEmpty(row - 1, col - 1))
+        if (parts.Length != 2)
         {
-            return new GridMove
-            {
-                PlayerIndex = p.Index,
-                Row = row - 1,
-                Col = col - 1,
-                Value = Piece
-            };
+            Console.WriteLine("Invalid or occupied cell — enter row and column. Example: 1 2");
+            return null;
         }
 
-        Console.WriteLine("Invalid or occupied cell — enter row and column. Example: 1 2");
-        return null;
+        if (!int.TryParse(parts[0], out int row))
+        {
+            Console.WriteLine("Invalid or occupied cell — enter row and column. Example: 1 2");
+            return null;
+        }
+
+        if (!int.TryParse(parts[1], out int col))
+        {
+            Console.WriteLine("Invalid or occupied cell — enter row and column. Example: 1 2");
+            return null;
+        }
+
+        if (row < 1 || row > BoardSize || col < 1 || col > BoardSize)
+        {
+            Console.WriteLine("Invalid or occupied cell — enter row and column. Example: 1 2");
+            return null;
+        }
+
+        if (!Grid.IsEmpty(row - 1, col - 1))
+        {
+            Console.WriteLine("Invalid or occupied cell — enter row and column. Example: 1 2");
+            return null;
+        }
+
+        return new GridMove
+        {
+            PlayerIndex = p.Index,
+            Row = row - 1,
+            Col = col - 1,
+            Value = Piece
+        };
     }
 
     public override void ShowTurnInfo(Player currentPlayer)
@@ -88,9 +112,6 @@ public class NotaktoGame : BaseGame
         Console.WriteLine("Enter Your Move [row <space> col (e.g. 1 2)] or Commands:  U=Undo  R=Redo  S=Save  H=Help  E=Exit");
     }
 
-    protected override void ShowGameHelp()
-    {
-        Console.WriteLine("  Both players place X. Completing a 3-in-a-row loses!");
-        Console.WriteLine("  Try to force your opponent to complete the line.");
-    }
+    protected override string GetGameHelp() =>
+        "Enter row and column to place X. Example: 1 3";
 }

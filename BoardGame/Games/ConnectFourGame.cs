@@ -2,6 +2,7 @@ using BoardGame.Core;
 
 namespace BoardGame.Games;
 
+// Connect Four on a 6x7 board: pieces drop to the bottom of a column.
 public class ConnectFourGame : BaseGame
 {
     private const int BoardRows = 6;
@@ -13,22 +14,36 @@ public class ConnectFourGame : BaseGame
 
     public ConnectFourGame(Player[] players) : base(players) { }
 
-    protected override void SetupBoard() => Board = new GridBoard(BoardRows, BoardCols);
+    protected override void SetupBoard()
+    {
+        Board = new GridBoard(BoardRows, BoardCols);
+    }
 
+    // Find the lowest empty row in the given column
     private int DropRow(int col)
     {
         for (int r = Grid.Rows - 1; r >= 0; r--)
-            if (Grid.IsEmpty(r, col)) return r;
+        {
+            if (Grid.IsEmpty(r, col))
+                return r;
+        }
         return NoRow;
     }
 
     protected override bool CheckWin()
-        => WinChecker.HasLine(Grid, Current.Symbol, WinLength);
+    {
+        return WinChecker.HasLine(Grid, Current.Symbol, WinLength);
+    }
 
-    protected override bool HasMoves() => !Grid.IsFull();
+    protected override bool HasMoves()
+    {
+        return !Grid.IsFull();
+    }
 
     public override bool CheckWinOnBoard(Board b)
-        => WinChecker.HasLine((GridBoard)b, Current.Symbol, WinLength);
+    {
+        return WinChecker.HasLine((GridBoard)b, Current.Symbol, WinLength);
+    }
 
     public override List<Move> GetValidMoves()
     {
@@ -37,6 +52,7 @@ public class ConnectFourGame : BaseGame
         {
             int row = DropRow(c);
             if (row >= 0)
+            {
                 moves.Add(new GridMove
                 {
                     PlayerIndex = CurrentIdx,
@@ -44,6 +60,7 @@ public class ConnectFourGame : BaseGame
                     Col = c,
                     Value = Current.Symbol
                 });
+            }
         }
         return moves;
     }
@@ -55,27 +72,34 @@ public class ConnectFourGame : BaseGame
 
     public override Move? PromptHumanMove(Player p, string input)
     {
-        if (int.TryParse(input, out int col)
-            && col >= 1 && col <= Grid.Cols)
+        if (!int.TryParse(input, out int col))
         {
-            int row = DropRow(col - 1);
-
-            if (row >= 0)
-            {
-                return new GridMove
-                {
-                    PlayerIndex = p.Index,
-                    Row = row,
-                    Col = col - 1,
-                    Value = p.Symbol
-                };
-            }
+            Console.WriteLine($"Column full or invalid — enter a column number from 1 to {Grid.Cols}.");
+            return null;
         }
 
-        Console.WriteLine($"Column full or invalid — enter a column number from 1 to {Grid.Cols}.");
-        return null;
+        if (col < 1 || col > Grid.Cols)
+        {
+            Console.WriteLine($"Column full or invalid — enter a column number from 1 to {Grid.Cols}.");
+            return null;
+        }
+
+        int row = DropRow(col - 1);
+        if (row < 0)
+        {
+            Console.WriteLine($"Column full or invalid — enter a column number from 1 to {Grid.Cols}.");
+            return null;
+        }
+
+        return new GridMove
+        {
+            PlayerIndex = p.Index,
+            Row = row,
+            Col = col - 1,
+            Value = p.Symbol
+        };
     }
 
-    protected override void ShowGameHelp()
-        => Console.WriteLine("  Enter a column number 1-7. Pieces fall to the bottom.");
+    protected override string GetGameHelp() =>
+        "Enter a column number (1-7). Example: 4";
 }

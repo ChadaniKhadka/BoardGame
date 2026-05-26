@@ -3,6 +3,7 @@ using BoardGame.Factory;
 
 namespace BoardGame;
 
+// Entry point for the board game framework console application.
 public class Program
 {
     public static void Main(string[] args)
@@ -35,7 +36,9 @@ public class Program
 
     private static bool HandleMainMenuChoice()
     {
-        switch (Console.ReadLine()?.Trim())
+        string? choice = Console.ReadLine()?.Trim();
+
+        switch (choice)
         {
             case "1":
                 NewGame();
@@ -44,7 +47,8 @@ public class Program
                 LoadGame();
                 return true;
             case "3":
-                return !ExitGame();
+                bool staying = !ExitGame();
+                return staying;
             default:
                 Console.WriteLine("  Please enter 1, 2 or 3.");
                 return true;
@@ -54,7 +58,8 @@ public class Program
     private static bool ExitGame()
     {
         Console.Write("  Are you sure you want to exit? (y/n): ");
-        return (Console.ReadLine()?.Trim().ToLower() ?? "n") == "y";
+        string answer = Console.ReadLine()?.Trim().ToLower() ?? "n";
+        return answer == "y";
     }
 
     private static void NewGame()
@@ -68,7 +73,8 @@ public class Program
 
         try
         {
-            GameFactory.Create(gameChoice.Value, players).Play();
+            Game game = GameFactory.Create(gameChoice.Value, players);
+            game.Play();
         }
         catch (Exception ex)
         {
@@ -89,7 +95,13 @@ public class Program
         Console.WriteLine("+-----------------------------------------------------------+");
         Console.Write("Choice: ");
 
-        if (!int.TryParse(Console.ReadLine()?.Trim(), out int gameChoice) || gameChoice < 1 || gameChoice > 5)
+        if (!int.TryParse(Console.ReadLine()?.Trim(), out int gameChoice))
+        {
+            Console.WriteLine("  Invalid choice.");
+            return null;
+        }
+
+        if (gameChoice < 1 || gameChoice > 5)
         {
             Console.WriteLine("  Invalid choice.");
             return null;
@@ -117,7 +129,8 @@ public class Program
 
         try
         {
-            GameFactory.Load(filename).Play();
+            Game game = GameFactory.Load(filename);
+            game.Play();
         }
         catch (Exception ex)
         {

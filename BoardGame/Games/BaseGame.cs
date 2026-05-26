@@ -3,22 +3,48 @@ using BoardGame.Players;
 
 namespace BoardGame.Games;
 
+// Shared save/load and move-prompt logic for games played on a grid board.
 public abstract class BaseGame : Game
 {
     protected GridBoard Grid => (GridBoard)Board;
 
     protected BaseGame(Player[] players) : base(players) { }
 
-    public override GameState CreateGameState() => new()
+    public override GameState CreateGameState()
     {
-        GameType = GameName.ToLower().Replace(" ", "").Replace("-", ""),
-        BoardData = Board.Serialize(),
-        CurrentPlayerIndex = CurrentIdx,
-        PlayerNames = Players.Select(p => p.Name).ToArray(),
-        PlayerSymbols = Players.Select(p => p.Symbol).ToArray(),
-        PlayerTypes = Players.Select(p => p is ComputerPlayer ? "Computer" : "Human").ToArray(),
-        MoveHistory = History.GetHistory().Select(m => m.Serialize()).ToList()
-    };
+        string[] playerNames = new string[Players.Length];
+        char[] playerSymbols = new char[Players.Length];
+        string[] playerTypes = new string[Players.Length];
+
+        for (int i = 0; i < Players.Length; i++)
+        {
+            playerNames[i] = Players[i].Name;
+            playerSymbols[i] = Players[i].Symbol;
+            if (Players[i] is ComputerPlayer)
+                playerTypes[i] = "Computer";
+            else
+                playerTypes[i] = "Human";
+        }
+
+        List<string> moveHistory = new List<string>();
+        List<Move> moves = History.GetHistory();
+        foreach (Move move in moves)
+            moveHistory.Add(move.Serialize());
+
+        string gameType = GameName.ToLower();
+        gameType = gameType.Replace(" ", "");
+        gameType = gameType.Replace("-", "");
+
+        GameState state = new GameState();
+        state.GameType = gameType;
+        state.BoardData = Board.Serialize();
+        state.CurrentPlayerIndex = CurrentIdx;
+        state.PlayerNames = playerNames;
+        state.PlayerSymbols = playerSymbols;
+        state.PlayerTypes = playerTypes;
+        state.MoveHistory = moveHistory;
+        return state;
+    }
 
     public override void LoadFromState(GameState s)
     {
@@ -28,7 +54,10 @@ public abstract class BaseGame : Game
         Board.Deserialize(s.BoardData);
         CurrentIdx = s.CurrentPlayerIndex;
 
-        List<Move> moves = s.MoveHistory.Select(GridMove.Deserialize).Cast<Move>().ToList();
+        List<Move> moves = new List<Move>();
+        foreach (string moveText in s.MoveHistory)
+            moves.Add(GridMove.Deserialize(moveText));
+
         History.RebuildFromMoves(moves, emptyBoard);
     }
 
@@ -36,23 +65,42 @@ public abstract class BaseGame : Game
     {
         string[] parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
-        if (parts.Length == 2
-            && int.TryParse(parts[0], out int row)
-            && int.TryParse(parts[1], out int col)
-            && row >= 1 && row <= Grid.Rows
-            && col >= 1 && col <= Grid.Cols
-            && Grid.IsEmpty(row - 1, col - 1))
+        if (parts.Length != 2)
         {
-            return new GridMove
-            {
-                PlayerIndex = p.Index,
-                Row = row - 1,
-                Col = col - 1,
-                Value = p.Symbol
-            };
+            Console.WriteLine("  Invalid or occupied cell — try again.");
+            return null;
         }
 
-        Console.WriteLine("  Invalid or occupied cell — try again.");
-        return null;
+        if (!int.TryParse(parts[0], out int row))
+        {
+            Console.WriteLine("  Invalid or occupied cell — try again.");
+            return null;
+        }
+
+        if (!int.TryParse(parts[1], out int col))
+        {
+            Console.WriteLine("  Invalid or occupied cell — try again.");
+            return null;
+        }
+
+        if (row < 1 || row > Grid.Rows || col < 1 || col > Grid.Cols)
+        {
+            Console.WriteLine("  Invalid or occupied cell — try again.");
+            return null;
+        }
+
+        if (!Grid.IsEmpty(row - 1, col - 1))
+        {
+            Console.WriteLine("  Invalid or occupied cell — try again.");
+            return null;
+        }
+
+        return new GridMove
+        {
+            PlayerIndex = p.Index,
+            Row = row - 1,
+            Col = col - 1,
+            Value = p.Symbol
+        };
     }
 }

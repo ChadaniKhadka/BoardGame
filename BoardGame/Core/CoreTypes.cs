@@ -1,15 +1,16 @@
 namespace BoardGame.Core;
 
+// Base class for a single move made by a player.
 public abstract class Move
 {
     public int PlayerIndex { get; set; }
     public abstract string Serialize();
 }
 
+// Base class for a game board that can apply moves and display itself.
 public abstract class Board
 {
     public abstract bool ApplyMove(Move move);
-    public abstract bool UndoMove(Move move);
     public abstract bool IsFull();
     public abstract void Display();
     public abstract Board Clone();
@@ -17,6 +18,7 @@ public abstract class Board
     public abstract void Deserialize(string data);
 }
 
+// Base class for a player in a two-player game.
 public abstract class Player
 {
     public string Name { get; }
@@ -33,6 +35,7 @@ public abstract class Player
     public abstract Move? GetMove(Board board, Game game);
 }
 
+// Holds all data needed to save or load a game.
 public class GameState
 {
     public string GameType { get; set; } = "";
