@@ -64,16 +64,13 @@ public class Program
 
     private static void NewGame()
     {
-        int? gameChoice = PromptGameChoice();
-        if (gameChoice is null)
-            return;
-
+        int gameChoice = PromptGameChoice();
         string mode = PromptGameMode();
         Player[] players = GameFactory.BuildPlayers(mode);
 
         try
         {
-            Game game = GameFactory.Create(gameChoice.Value, players);
+            Game game = GameFactory.Create(gameChoice, players);
             game.Play();
         }
         catch (Exception ex)
@@ -82,44 +79,50 @@ public class Program
         }
     }
 
-    private static int? PromptGameChoice()
+    private static int PromptGameChoice()
     {
-        Console.WriteLine("+-----------------------------------------------------------+");
-        Console.WriteLine("|                       SELECT GAME                         |");
-        Console.WriteLine("+-----------------------------------------------------------+");
-        Console.WriteLine("|  1. Tic-Tac-Toe             (3x3, 3 in a row)             |");
-        Console.WriteLine("|  2. Numerical Tic-Tac-Toe   (3x3, line sum 15)            |");
-        Console.WriteLine("|  3. Notakto                 (3x3, last line loses)        |");
-        Console.WriteLine("|  4. Gomoku                  (15x15, 5 in a row)           |");
-        Console.WriteLine("|  5. Connect Four            (6x7, 4 in a row)             |");
-        Console.WriteLine("+-----------------------------------------------------------+");
-        Console.Write("Choice: ");
-
-        if (!int.TryParse(Console.ReadLine()?.Trim(), out int gameChoice))
+        while (true)
         {
-            Console.WriteLine("  Invalid choice.");
-            return null;
-        }
+            Console.WriteLine("+-----------------------------------------------------------+");
+            Console.WriteLine("|                       SELECT GAME                         |");
+            Console.WriteLine("+-----------------------------------------------------------+");
+            Console.WriteLine("|  1. Tic-Tac-Toe             (3x3, 3 in a row)             |");
+            Console.WriteLine("|  2. Numerical Tic-Tac-Toe   (3x3, line sum 15)            |");
+            Console.WriteLine("|  3. Notakto                 (3x3, last line loses)        |");
+            Console.WriteLine("|  4. Gomoku                  (15x15, 5 in a row)           |");
+            Console.WriteLine("|  5. Connect Four            (6x7, 4 in a row)             |");
+            Console.WriteLine("+-----------------------------------------------------------+");
+            Console.Write("Choice: ");
 
-        if (gameChoice < 1 || gameChoice > 5)
-        {
-            Console.WriteLine("  Invalid choice.");
-            return null;
-        }
+            if (int.TryParse(Console.ReadLine()?.Trim(), out int gameChoice)
+                && gameChoice >= 1
+                && gameChoice <= 5)
+            {
+                return gameChoice;
+            }
 
-        return gameChoice;
+            Console.WriteLine("  Please enter 1, 2, 3, 4 or 5.");
+        }
     }
 
     private static string PromptGameMode()
     {
-        Console.WriteLine("+------------------------------+");
-        Console.WriteLine("|            SELECT MODE       |");
-        Console.WriteLine("+------------------------------+");
-        Console.WriteLine("|  1. Human vs Human           |");
-        Console.WriteLine("|  2. Human vs Computer        |");
-        Console.WriteLine("+------------------------------+");
-        Console.Write("Choice: ");
-        return Console.ReadLine()?.Trim() ?? "1";
+        while (true)
+        {
+            Console.WriteLine("+------------------------------+");
+            Console.WriteLine("|            SELECT MODE       |");
+            Console.WriteLine("+------------------------------+");
+            Console.WriteLine("|  1. Human vs Human           |");
+            Console.WriteLine("|  2. Human vs Computer        |");
+            Console.WriteLine("+------------------------------+");
+            Console.Write("Choice: ");
+
+            string? choice = Console.ReadLine()?.Trim();
+            if (choice == "1" || choice == "2")
+                return choice;
+
+            Console.WriteLine("  Please enter 1 or 2.");
+        }
     }
 
     private static void LoadGame()
