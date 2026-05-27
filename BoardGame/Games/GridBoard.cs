@@ -111,7 +111,8 @@ public class GridBoard : Board
                     Console.Write(" " + cell + " |");
             }
 
-            Console.WriteLine("   row " + (Rows - r));
+            int rowLabel = isConnectFour ? Rows - r : r + 1;
+            Console.WriteLine("   row " + rowLabel);
 
             if (!isConnectFour && r < Rows - 1)
             {
